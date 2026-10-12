@@ -41,6 +41,10 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(-
 h1{margin:0;font-size:32px;font-weight:700;line-height:1.05;text-wrap:balance}
 .top-r{display:flex;align-items:center;gap:8px}
 .icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:var(--card);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+#musicBtn[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--red-deep)}
+#musicBtn[aria-pressed="true"] svg{animation:musicBob 1.6s ease-in-out infinite}
+.gm-bird{position:absolute;z-index:1;pointer-events:none;animation:gmBird 1.6s ease-out forwards}
+.gm-note{position:absolute;z-index:1;font-size:15px;font-weight:700;color:#fff;pointer-events:none;animation:gmNote 1.8s ease-out forwards}
 .coins{display:flex;align-items:center;gap:8px;background:var(--yellow);padding:7px 14px 7px 7px;border-radius:999px;font-weight:700;font-size:18px;font-variant-numeric:tabular-nums}
 .coins.bump{animation:coinBump .5s ease-out}
 
@@ -208,6 +212,7 @@ h2{margin:0;font-size:20px;font-weight:600}
 /* sheet + timer */
 .overlay{position:fixed;inset:0;z-index:80;display:flex;align-items:flex-end;justify-content:center}
 .overlay.center{align-items:center;padding-inline:16px}
+.overlay[hidden],.toast[hidden]{display:none}
 .backdrop{position:absolute;inset:0;background:rgba(42,20,20,.5);animation:fadeIn .25s both}
 .sheet{position:relative;width:100%;max-width:480px;max-height:92%;overflow:auto;background:var(--bg);border-radius:28px 28px 0 0;padding-inline:16px;padding-block:18px calc(22px + env(safe-area-inset-bottom,0px));box-sizing:border-box;display:flex;flex-direction:column;gap:12px;animation:sheetUp .35s cubic-bezier(.3,1.2,.5,1) both}
 .sheet-head{display:flex;justify-content:space-between;align-items:center}
@@ -270,6 +275,9 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
 @keyframes cardIn{0%{transform:translateY(16px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes musicBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-8deg)}}
+@keyframes gmBird{0%{transform:translateY(10px) scale(.4);opacity:0}15%{transform:translateY(0) scale(1.1);opacity:1}70%{opacity:1}100%{transform:translateY(-8px) scale(1);opacity:0}}
+@keyframes gmNote{0%{transform:translate(0,0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translate(10px,-40px) scale(1.1) rotate(10deg);opacity:0}}
 @keyframes selPop{0%{transform:scale(1)}35%{transform:scale(.9,1.08)}65%{transform:scale(1.08,.95)}100%{transform:scale(1)}}
 @keyframes selGlow{
   0%,100%{filter:drop-shadow(1.5px 0 0 #fff) drop-shadow(-1.5px 0 0 #fff) drop-shadow(0 1.5px 0 #fff) drop-shadow(0 -1.5px 0 #fff) drop-shadow(0 0 4px rgba(255,201,60,.8))}
@@ -291,6 +299,7 @@ h2{margin:0;font-size:20px;font-weight:600}
       <h1 id="h1">Today</h1>
     </div>
     <div class="top-r">
+      <button class="icon-btn" id="musicBtn" data-act="music" aria-pressed="false" aria-label="Play garden music"></button>
       <button class="icon-btn" id="soundBtn" data-act="sound" aria-label="Sound is on. Turn sound off"></button>
       <div class="coins" id="coins" aria-label="Coins">
         <svg width="26" height="26" viewBox="0 0 26 26" aria-hidden="true"><circle cx="13" cy="13" r="12" fill="#FF8A1F"></circle><circle cx="13" cy="13" r="8" fill="none" stroke="#FFE08A" stroke-width="2.5"></circle></svg>
@@ -397,6 +406,219 @@ h2{margin:0;font-size:20px;font-weight:600}
 </div>
 
 <script>
+/* Garden Music: calm ambient sound made live in the browser (soft chords, birds, breeze; crickets and an owl at night). */
+(function(){
+'use strict';
+function rr(a,b){return a+Math.random()*(b-a)}
+function pick(a){return a[Math.floor(Math.random()*a.length)]}
+var MIX={music:{on:true,vol:.8},birds:{on:true,vol:.8},wind:{on:true,vol:.5},stream:{on:false,vol:.4}};
+function GM_L(id){return MIX[id]}
+function gmNight(){var h=new Date().getHours();return h>=19||h<6}
+var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
+function showCall(pan,kind){
+  if(document.hidden)return;var sc=document.getElementById('scene');if(!sc)return;
+  var w=sc.clientWidth,x=Math.round((pan+1)/2*(w-70))+24,y=Math.round(rr(54,110));
+  if(kind!=='owl'){
+    var col=pick(['#FF5FA2','#FFC93C','#FFFFFF','#FF8A1F','#7B4BE0']);
+    var b=document.createElement('div');b.className='gm-bird';b.style.left=x+'px';b.style.top=y+'px';b.setAttribute('aria-hidden','true');
+    b.innerHTML='<svg width="28" height="20" viewBox="0 0 30 22"><path d="M2 14c5 0 7-5 12-5 4 0 6 3 9 3l5-3-2 5c-2 4-6 7-12 7S3 18 2 14z" fill="'+col+'" stroke="#2A1414" stroke-width="1.6" stroke-linejoin="round"></path><circle cx="20" cy="12" r="1.3" fill="#2A1414"></circle><path d="M8 13c2-4 5-6 8-5" fill="none" stroke="#2A1414" stroke-width="1.4" stroke-linecap="round"></path></svg>';
+    sc.appendChild(b);setTimeout(function(){b.remove()},1700);
+  }
+  var n=document.createElement('div');n.className='gm-note';n.setAttribute('aria-hidden','true');n.style.left=(x+14)+'px';n.style.top=(y-6)+'px';
+  n.textContent=kind==='owl'?'hoo':(kind==='dove'?'coo':'\u266A');sc.appendChild(n);setTimeout(function(){n.remove()},1900);
+}
+/* ---------- audio engine ---------- */
+function Engine(){
+  var AC=window.AudioContext||window.webkitAudioContext;
+  var c=new AC(),self=this;this.c=c;this.playing=false;this.night=gmNight();
+  var master=c.createGain();master.gain.value=0;
+  var comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.4;
+  master.connect(comp);comp.connect(c.destination);this.master=master;
+  /* reverb: a soft, long garden-air tail */
+  var rev=c.createConvolver(),len=c.sampleRate*4,ir=c.createBuffer(2,len,c.sampleRate);
+  for(var ch=0;ch<2;ch++){var d=ir.getChannelData(ch);for(var i=0;i<len;i++)d[i]=(Math.random()*2-1)*Math.pow(1-i/len,2.6)*(i<c.sampleRate*.01?i/(c.sampleRate*.01):1)}
+  rev.buffer=ir;var revOut=c.createGain();revOut.gain.value=.9;rev.connect(revOut);revOut.connect(master);
+  this.rev=rev;
+  function bus(){var g=c.createGain();g.connect(master);return g}
+  this.bus={music:bus(),birds:bus(),wind:bus(),stream:bus()};
+  /* noise source */
+  var nb=c.createBuffer(1,c.sampleRate*6,c.sampleRate),nd=nb.getChannelData(0),b0=0,b1=0,b2=0;
+  for(var k=0;k<nd.length;k++){var w=Math.random()*2-1;b0=.997*b0+w*.029;b1=.985*b1+w*.032;b2=.95*b2+w*.048;nd[k]=(b0+b1+b2+w*.02)*.9}
+  this.noise=nb;
+  this.startWind();this.startStream();
+  this.chordIdx=0;this.nextChord=0;this.nextPluck=0;this.nextBird=0;this.nextCricket=0;this.nextOwl=0;
+  this.timer=null;
+}
+Engine.prototype.send=function(node,amt){var g=this.c.createGain();g.gain.value=amt;node.connect(g);g.connect(this.rev)};
+Engine.prototype.pan=function(p){var c=this.c;if(c.createStereoPanner){var s=c.createStereoPanner();s.pan.value=p;return s}return c.createGain()};
+Engine.prototype.startWind=function(){
+  var c=this.c,s=c.createBufferSource();s.buffer=this.noise;s.loop=true;
+  var f=c.createBiquadFilter();f.type='bandpass';f.frequency.value=500;f.Q.value=.6;
+  var lfo=c.createOscillator(),lg=c.createGain();lfo.frequency.value=.06;lg.gain.value=320;lfo.connect(lg);lg.connect(f.frequency);
+  var g=c.createGain();g.gain.value=.5;var lfo2=c.createOscillator(),lg2=c.createGain();lfo2.frequency.value=.09;lg2.gain.value=.3;lfo2.connect(lg2);lg2.connect(g.gain);
+  var p=this.pan(0),plfo=c.createOscillator(),pg=c.createGain();plfo.frequency.value=.03;pg.gain.value=.5;
+  if(p.pan){plfo.connect(pg);pg.connect(p.pan)}
+  s.connect(f);f.connect(g);g.connect(p);p.connect(this.bus.wind);this.send(g,.25);
+  s.start();lfo.start();lfo2.start();plfo.start();
+};
+Engine.prototype.startStream=function(){
+  var c=this.c,s=c.createBufferSource();s.buffer=this.noise;s.loop=true;s.playbackRate.value=1.6;
+  var hp=c.createBiquadFilter();hp.type='highpass';hp.frequency.value=700;
+  var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;
+  var g=c.createGain();g.gain.value=.35;this.streamGain=g;
+  s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(this.bus.stream);this.send(g,.2);s.start();
+};
+/* the stream "babbles": fast random swells plus tiny water bubbles */
+Engine.prototype.babble=function(t){
+  if(!GM_L('stream').on)return;var c=this.c;
+  this.streamGain.gain.setTargetAtTime(rr(.22,.5),t,.05);
+  if(Math.random()<.35){
+    var o=c.createOscillator(),g=c.createGain(),p=this.pan(rr(-.6,.6)),f0=rr(500,900);
+    o.type='sine';o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f0*rr(1.8,2.6),t+.06);
+    g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(rr(.015,.04),t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.08);
+    o.connect(g);g.connect(p);p.connect(this.bus.stream);o.start(t);o.stop(t+.1);
+  }
+};
+/* chords: warm and slow. day = bright major colours, night = softer and lower */
+var DAY=[[48,55,64,71,74],[45,52,60,67,71],[41,48,57,64,67],[43,50,59,62,69],[45,52,60,64,72],[41,48,55,64,69]];
+var NIGHT=[[45,52,60,64,71],[41,48,57,60,67],[43,50,55,62,65],[40,47,55,59,67]];
+function mtof(m){return 440*Math.pow(2,(m-69)/12)}
+Engine.prototype.chord=function(t){
+  if(!GM_L('music').on)return;var c=this.c,set=this.night?NIGHT:DAY,ch=set[this.chordIdx%set.length];this.chordIdx++;
+  var dur=this.night?14:11,self=this;
+  var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=this.night?900:1500;lp.Q.value=.3;
+  var out=c.createGain();out.gain.value=1;lp.connect(out);out.connect(this.bus.music);this.send(out,.55);
+  ch.forEach(function(m,i){
+    [0,1].forEach(function(v){
+      var o=c.createOscillator(),g=c.createGain(),p=self.pan((i/(ch.length-1))*1.2-.6+(v?.1:-.1));
+      o.type=v?'triangle':'sine';o.frequency.value=mtof(m-(self.night?12:0)*(i===0?1:0));o.detune.value=v?rr(4,9):rr(-6,-2);
+      var peak=(i===0?.05:.035)*(v?.55:1);
+      g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(peak,t+dur*.35);g.gain.setValueAtTime(peak,t+dur*.6);g.gain.linearRampToValueAtTime(0,t+dur+3.5);
+      o.connect(g);g.connect(p);p.connect(lp);o.start(t);o.stop(t+dur+4);
+    });
+  });
+  return dur;
+};
+/* soft bell plucks drifting over the chords, from a gentle pentatonic scale */
+var PENTA=[72,74,76,79,81,84,86,88];
+Engine.prototype.pluck=function(t){
+  if(!GM_L('music').on)return;var c=this.c,m=pick(PENTA)-(this.night?12:0),f=mtof(m),p=this.pan(rr(-.7,.7));
+  var g=c.createGain();g.connect(p);p.connect(this.bus.music);this.send(g,.85);
+  [[1,.06],[2.001,.018],[3.01,.006]].forEach(function(h){
+    var o=c.createOscillator(),gg=c.createGain();o.type='sine';o.frequency.value=f*h[0];
+    gg.gain.setValueAtTime(0,t);gg.gain.linearRampToValueAtTime(h[1],t+.015);gg.gain.exponentialRampToValueAtTime(.0001,t+3.2/h[0]);
+    o.connect(gg);gg.connect(g);o.start(t);o.stop(t+3.4);
+  });
+  if(Math.random()<.35){var m2=pick(PENTA)-(this.night?12:0);
+    var o2=c.createOscillator(),g2=c.createGain(),t2=t+rr(.25,.5);o2.type='sine';o2.frequency.value=mtof(m2);
+    g2.gain.setValueAtTime(0,t2);g2.gain.linearRampToValueAtTime(.045,t2+.015);g2.gain.exponentialRampToValueAtTime(.0001,t2+2.6);o2.connect(g2);g2.connect(p);this.send(g2,.85);o2.start(t2);o2.stop(t2+2.8);}
+};
+/* ---------- birds ---------- */
+Engine.prototype.voice=function(t,dist,pan){
+  /* one bird position: far birds are quieter, duller and wetter */
+  var c=this.c,g=c.createGain(),lp=c.createBiquadFilter(),p=this.pan(pan);
+  lp.type='lowpass';lp.frequency.value=9000-dist*5000;g.gain.value=(1-dist*.6);
+  g.connect(lp);lp.connect(p);p.connect(this.bus.birds);this.send(lp,.25+dist*.5);return g;
+};
+Engine.prototype.tone=function(dest,t,f0,f1,dur,vol,vib){
+  var c=this.c,o=c.createOscillator(),g=c.createGain();o.type='sine';
+  o.frequency.setValueAtTime(f0,t);o.frequency.exponentialRampToValueAtTime(f1,t+dur);
+  if(vib){var m=c.createOscillator(),mg=c.createGain();m.frequency.value=vib[0];mg.gain.value=vib[1];m.connect(mg);mg.connect(o.frequency);m.start(t);m.stop(t+dur+.02)}
+  g.gain.setValueAtTime(0,t);g.gain.linearRampToValueAtTime(vol,t+Math.min(.012,dur*.25));g.gain.setValueAtTime(vol,t+dur*.6);g.gain.exponentialRampToValueAtTime(.0001,t+dur);
+  o.connect(g);g.connect(dest);o.start(t);o.stop(t+dur+.03);
+};
+var SPECIES=['chirper','whistler','warbler','chirper','whistler','twitter','dove'];
+Engine.prototype.bird=function(t){
+  var sp=pick(SPECIES),dist=rr(0,.85),pan=rr(-.9,.9),v=this.voice(t,dist,pan),self=this,x=t,i,n;
+  if(sp==='chirper'){ /* quick bright chirps, like a sparrow */
+    n=Math.floor(rr(3,8));var base=rr(3200,4600);
+    for(i=0;i<n;i++){var up=Math.random()<.5;self.tone(v,x,up?base*.8:base*1.15,up?base*1.2:base*.75,rr(.05,.09),.12);x+=rr(.09,.16)}
+  } else if(sp==='whistler'){ /* clear sliding whistles, like a blackbird or oriole */
+    n=Math.floor(rr(2,5));var b2=rr(1800,2800);
+    for(i=0;i<n;i++){var a=b2*rr(.85,1.25),z=a*rr(.75,1.35);self.tone(v,x,a,z,rr(.16,.34),.11,[rr(5,8),rr(15,40)]);x+=rr(.22,.42)}
+  } else if(sp==='warbler'){ /* a rolling trill, like a wren */
+    var f=rr(3000,4200),d=rr(.6,1.2);self.tone(v,x,f,f*rr(.8,1.15),d,.09,[rr(22,32),rr(350,600)]);x+=d;
+    if(Math.random()<.5)self.tone(v,x+.05,f*1.2,f*.9,.12,.1);
+  } else if(sp==='twitter'){ /* a fast tiny series, like a goldfinch */
+    n=Math.floor(rr(6,12));var b3=rr(4200,5600);
+    for(i=0;i<n;i++){self.tone(v,x,b3*rr(.9,1.1),b3*rr(.7,1.3),.035,.07);x+=rr(.05,.075)}
+  } else { /* a soft dove far away */
+    var dv=this.voice(t,rr(.4,.8),pan),b4=rr(480,560);
+    self.tone(dv,x,b4*.9,b4,.35,.12);x+=.45;self.tone(dv,x,b4,b4*.95,.6,.14);x+=.75;self.tone(dv,x,b4*.95,b4*.85,.4,.1);x+=.5;
+  }
+  var delay=Math.max(0,(t-this.c.currentTime)*1000);
+  setTimeout(function(){if(self.playing)showCall(pan,sp==='dove'?'dove':'bird')},delay);
+  /* sometimes a second bird answers from the other side */
+  if(sp!=='dove'&&Math.random()<.3)this.pendingAnswer={t:x+rr(.4,1.2),pan:-pan};
+};
+/* ---------- night creatures ---------- */
+Engine.prototype.crickets=function(t){
+  var c=this.c,pan=rr(-.8,.8),v=this.voice(t,rr(.2,.8),pan),f=rr(4200,4800),x=t;
+  for(var r=0;r<Math.floor(rr(2,5));r++){
+    for(var k=0;k<3;k++){this.tone(v,x,f,f,.022,.035);x+=.032}
+    x+=rr(.22,.32);
+  }
+};
+Engine.prototype.owl=function(t){
+  var v=this.voice(t,rr(.5,.8),rr(-.8,.8)),b=rr(330,380),x=t,self=this;
+  self.tone(v,x,b,b*.98,.35,.16);x+=.55;self.tone(v,x,b*1.02,b*.94,.25,.12);x+=.3;self.tone(v,x,b,b*.9,.7,.15);
+  setTimeout(function(){if(self.playing)showCall(rr(-.8,.8),'owl')},Math.max(0,(t-c2(self))*1000));
+};
+function c2(s){return s.c.currentTime}
+/* ---------- scheduler ---------- */
+Engine.prototype.tick=function(){
+  var c=this.c,now=c.currentTime,ahead=now+.25;
+  if(now>=this.nextChord-1.5){var d=this.chord(Math.max(now+.05,this.nextChord))||10;this.nextChord=Math.max(now,this.nextChord)+d*(this.night?.78:.72)}
+  if(now>=this.nextPluck){this.pluck(now+.1);this.nextPluck=now+rr(this.night?4:2.2,this.night?9:5.5)}
+  if(!this.night){
+    if(GM_L('birds').on&&now>=this.nextBird){this.bird(now+.1);this.nextBird=now+rr(2.5,7)}
+    if(GM_L('birds').on&&this.pendingAnswer&&now>=this.pendingAnswer.t-.2){var pa=this.pendingAnswer;this.pendingAnswer=null;this.answer(pa)}
+  } else {
+    if(GM_L('birds').on&&now>=this.nextCricket){this.crickets(now+.05);this.nextCricket=now+rr(.6,1.8)}
+    if(GM_L('birds').on&&now>=this.nextOwl){if(this.nextOwl)this.owl(now+.1);this.nextOwl=now+rr(14,26)}
+  }
+  if(Math.random()<.7)this.babble(ahead);
+};
+Engine.prototype.answer=function(pa){
+  var t=Math.max(this.c.currentTime+.05,pa.t),v=this.voice(t,rr(.3,.85),pa.pan),x=t,base=rr(3000,4400),self=this;
+  for(var i=0;i<Math.floor(rr(2,5));i++){this.tone(v,x,base*rr(.85,1.15),base*rr(.8,1.25),rr(.06,.12),.1);x+=rr(.1,.18)}
+  setTimeout(function(){if(self.playing)showCall(pa.pan,'bird')},Math.max(0,(t-this.c.currentTime)*1000));
+};
+Engine.prototype.setNight=function(v){this.night=v;this.nextChord=this.c.currentTime+.5;this.nextOwl=0;this.nextBird=this.c.currentTime+1.5;applyLevels()};
+Engine.prototype.start=function(){
+  var self=this,c=this.c;if(c.state==='suspended')c.resume();this.playing=true;
+  this.master.gain.cancelScheduledValues(c.currentTime);this.master.gain.setValueAtTime(this.master.gain.value,c.currentTime);this.master.gain.linearRampToValueAtTime(.9,c.currentTime+2.5);
+  this.nextChord=c.currentTime+.1;this.nextBird=c.currentTime+1.2;this.nextPluck=c.currentTime+2;
+  clearInterval(this.timer);this.timer=setInterval(function(){self.tick()},100);
+};
+Engine.prototype.stop=function(){
+  var c=this.c,self=this;this.playing=false;
+  this.master.gain.cancelScheduledValues(c.currentTime);this.master.gain.setValueAtTime(this.master.gain.value,c.currentTime);this.master.gain.linearRampToValueAtTime(0,c.currentTime+1.2);
+  clearInterval(this.timer);setTimeout(function(){if(!self.playing)c.suspend()},1400);
+};
+
+var E=null,nightT=null;
+function applyLevels(){
+  if(!E)return;var c=E.c;
+  Object.keys(MIX).forEach(function(id){var l=MIX[id],lvl=l.on?l.vol:0;if(id==='birds'&&E.night)lvl*=.8;if(id==='wind')lvl*=E.night?.7:1;
+    E.bus[id].gain.setTargetAtTime(lvl,c.currentTime,.4)});
+}
+window.GardenMusic={
+  start:function(){
+    try{
+      if(!E){E=new Engine();applyLevels()}
+      if(!E.playing)E.start();
+      clearInterval(nightT);nightT=setInterval(function(){var n=gmNight();if(E&&n!==E.night)E.setNight(n)},60000);
+      return true;
+    }catch(e){return false}
+  },
+  stop:function(){if(E&&E.playing)E.stop();clearInterval(nightT)},
+  playing:function(){return !!(E&&E.playing)},
+  isNight:gmNight
+};
+})();
+</script>
+<script>
 (function(){
 'use strict';
 var PAL=['#E8263A','#FF8A1F','#FFC93C','#13B5A6','#7B4BE0','#FF5FA2','#2F7DF6'];
@@ -414,6 +636,7 @@ var CRANE='<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><p
 var HOUSE='<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l5-4 5 4v11M15 21V13h4v8M9 21v-4h2v4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"></path></svg>';
 var FLOWER='<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8M12 13c0-4 3-7 7-7 0 4-3 7-7 7zM12 15c0-3-2.5-5.5-6-5.5 0 3 2.5 5.5 6 5.5z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"></path></svg>';
 var SOUND_ON='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"></path><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
+var MUSIC_IC='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M9 18V5l11-2v13" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"></path><circle cx="6.5" cy="18" r="2.6" fill="currentColor"></circle><circle cx="17.5" cy="16" r="2.6" fill="currentColor"></circle></svg>';
 var SOUND_OFF='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"></path><path d="M16 9l6 6M22 9l-6 6" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
 
 function $(id){return document.getElementById(id)}
@@ -710,6 +933,9 @@ function render(){
   var cn=$('coinN'),nc=String(coins());
   if(cn.textContent!==nc){cn.textContent=nc;if(ui.coinBump){var cb=$('coins');cb.classList.remove('bump');void cb.offsetWidth;cb.classList.add('bump')}}
   $('coins').setAttribute('aria-label',nc+' coins');
+  var mOn=!!S.music;
+  $('musicBtn').innerHTML=MUSIC_IC;$('musicBtn').setAttribute('aria-pressed',mOn?'true':'false');
+  $('musicBtn').setAttribute('aria-label',mOn?'Garden music is on. Turn it off':'Play garden music');
   $('soundBtn').innerHTML=S.sound?SOUND_ON:SOUND_OFF;
   $('soundBtn').setAttribute('aria-label',S.sound?'Sound is on. Turn sound off':'Sound is off. Turn sound on');
   $('scene').classList.toggle('tall',ui.view==='town');
@@ -773,6 +999,14 @@ var act={
   'close-month':function(){$('monthEnd').hidden=true;ui.view='today';render()},
   'go-build':function(b,id){ui.view='today';ui.menu=null;render();var c=document.querySelector('.step.next[data-id="'+id+'"]');if(c){c.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});setTimeout(function(){c.focus({preventScroll:true})},300)}},
   sound:function(){S.sound=!S.sound;persist();render();if(S.sound)sfx.ding()},
+  music:function(){
+    var G=window.GardenMusic;if(!G)return;
+    S.music=!S.music;persist();render();
+    if(S.music){
+      if(G.start())toast(G.isNight()?'Night garden: crickets, an owl and soft music':'Garden music on: birds, breeze and soft music');
+      else{S.music=false;persist();render();toast('Music is not available in this browser')}
+    } else G.stop();
+  },
   'open-sheet':openSheet,'close-sheet':closeSheet,
   'switch':function(){setSwitch($('bdSwitch').getAttribute('aria-checked')!=='true');sfx.tap()},
   'add-step':function(){readSteps();if(sheetSteps.length<MAX_STEPS){sheetSteps.push('');renderSteps(sheetSteps.length-1)}},
@@ -781,7 +1015,20 @@ var act={
 };
 document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!$('sheet').hidden)closeSheet();if(!$('timer').hidden)closeTimer();if(!$('monthEnd').hidden){$('monthEnd').hidden=true;render()}}});
-document.addEventListener('visibilitychange',function(){if(document.visibilityState==='visible'){render();checkMonth(townItems())}});
+document.addEventListener('visibilitychange',function(){
+  var G=window.GardenMusic;
+  if(document.visibilityState==='visible'){render();checkMonth(townItems());if(S.music&&G&&musicArmed)G.start()}
+  else if(G)G.stop();
+});
+/* browsers only allow sound after a tap, so remembered music starts on the first touch */
+var musicArmed=false;
+function armMusic(e){
+  if(e&&e.target&&e.target.closest&&e.target.closest('#musicBtn'))return;
+  musicArmed=true;document.removeEventListener('pointerdown',armMusic,true);
+  if(S.music&&window.GardenMusic)window.GardenMusic.start();
+}
+document.addEventListener('pointerdown',armMusic,true);
+$('musicBtn').addEventListener('pointerdown',function(){musicArmed=true;document.removeEventListener('pointerdown',armMusic,true)});
 
 /* ---------- add sheet ---------- */
 var sheetSteps=['','',''];
