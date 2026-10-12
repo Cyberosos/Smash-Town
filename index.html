@@ -41,6 +41,50 @@ button:focus-visible,input:focus-visible,a:focus-visible{outline:3px solid var(-
 h1{margin:0;font-size:32px;font-weight:700;line-height:1.05;text-wrap:balance}
 .top-r{display:flex;align-items:center;gap:8px}
 .icon-btn{width:44px;height:44px;border-radius:50%;border:0;background:var(--card);display:grid;place-items:center;cursor:pointer;box-shadow:0 2px 0 var(--line)}
+/* time of day, from the phone clock */
+.sun,.rays{transition:top 1.6s ease,opacity 1.6s ease,background 1.6s ease}
+.scene.dusk{background:linear-gradient(180deg,#5B3FA8 0%,#D9416B 55%,#FF9A4D 100%)}
+.scene.night{background:linear-gradient(180deg,#0F1A40 0%,#25306B 100%)}
+.dusk .sun{top:104px;background:#FF8A1F}
+.dusk .rays{top:80px;opacity:.35}
+.night .sun,.night .rays{opacity:0}
+.moon{position:absolute;top:18px;left:24px;width:38px;height:38px;border-radius:50%;background:#FFF6CF;box-shadow:inset -9px -4px 0 #E8DDB0,0 0 22px 4px rgba(255,246,207,.35);opacity:0;transform:translateY(-70px);transition:transform 1.6s ease,opacity 1.6s ease}
+.night .moon{opacity:1;transform:none}
+.star{position:absolute;width:4px;height:4px;border-radius:50%;background:#fff;opacity:0;transition:opacity 1.6s}
+.dusk .star{opacity:.35}
+.night .star{opacity:.9;animation:twStar 3s ease-in-out infinite}
+.dusk .cloud{background:#FFB8A0!important}
+.night .cloud{opacity:.22}
+.night .fly,.night .spark{display:none}
+.ffly{position:absolute;width:6px;height:6px;border-radius:50%;background:#FFF59A;box-shadow:0 0 8px 3px rgba(255,245,154,.8);opacity:0;pointer-events:none;z-index:1}
+.night .ffly,.dusk .ffly{animation:firefly 6s ease-in-out infinite}
+.dusk .hill{background:#1A9E5C}
+.night .hill{background:#0F5E37}
+.dusk .row{background:linear-gradient(to top,#118A4D 0 40px,transparent 40px)}
+.night .row{background:linear-gradient(to top,#0B5A33 0 40px,transparent 40px)}
+.dusk .win{animation:none;background:#FFE08A;box-shadow:0 0 4px 1px rgba(255,214,90,.6)}
+.night .win{animation:none;background:#FFE08A;box-shadow:0 0 7px 2px rgba(255,214,90,.9)}
+.night .zz{color:#FFF6CF}
+/* music sheet */
+.mode-card{display:flex;align-items:center;gap:14px;border-radius:20px;padding:14px 16px;color:#fff;background:var(--sky)}
+.mode-card.dusk{background:linear-gradient(120deg,#5B3FA8,#D9416B 60%,#FF9A4D)}
+.mode-card.night{background:linear-gradient(120deg,#0F1A40,#25306B)}
+.mode-card b{display:block;font-size:18px}
+.mode-card small{font-size:14px;opacity:.92}
+.mode-ic{width:48px;height:48px;border-radius:16px;background:rgba(255,255,255,.18);display:grid;place-items:center;flex-shrink:0}
+.m-play{display:flex;align-items:center;justify-content:center;gap:10px;width:100%;height:60px;border:0;border-radius:20px;background:var(--red);color:#fff;font-size:19px;font-weight:600;cursor:pointer;box-shadow:0 5px 0 var(--red-deep)}
+.m-play.on{background:var(--ink);box-shadow:0 5px 0 #000}
+#mBody{display:flex;flex-direction:column;gap:12px}
+.m-layers{display:flex;flex-direction:column;gap:8px}
+.m-layer{background:var(--card);border-radius:18px;padding:10px 14px;display:flex;align-items:center;gap:12px;box-shadow:0 2px 0 var(--line)}
+.m-ic{width:42px;height:42px;border-radius:13px;flex-shrink:0;display:grid;place-items:center}
+.m-main{flex:1;min-width:0;display:flex;flex-direction:column;gap:2px}
+.m-name{font-size:16px;font-weight:600}
+.m-main input[type=range]{width:100%;accent-color:var(--red);height:28px;margin:0}
+.m-layer .switch{width:56px;height:34px}
+.m-layer .switch .knob{width:26px;height:26px}
+.m-layer .switch[aria-checked="true"] .knob{transform:translateX(22px)}
+.m-note{margin:0;color:var(--muted);font-size:14px;text-align:center}
 #musicBtn[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--red-deep)}
 #musicBtn[aria-pressed="true"] svg{animation:musicBob 1.6s ease-in-out infinite}
 .gm-bird{position:absolute;z-index:1;pointer-events:none;animation:gmBird 1.6s ease-out forwards}
@@ -275,6 +319,8 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
 @keyframes cardIn{0%{transform:translateY(16px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes twStar{0%,100%{opacity:.3}50%{opacity:1}}
+@keyframes firefly{0%,100%{opacity:0;transform:translate(0,0)}30%{opacity:1}50%{transform:translate(14px,-10px)}70%{opacity:.8}}
 @keyframes musicBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-8deg)}}
 @keyframes gmBird{0%{transform:translateY(10px) scale(.4);opacity:0}15%{transform:translateY(0) scale(1.1);opacity:1}70%{opacity:1}100%{transform:translateY(-8px) scale(1);opacity:0}}
 @keyframes gmNote{0%{transform:translate(0,0) scale(.6);opacity:0}20%{opacity:1}100%{transform:translate(10px,-40px) scale(1.1) rotate(10deg);opacity:0}}
@@ -316,6 +362,16 @@ h2{margin:0;font-size:20px;font-weight:600}
     <div class="spark" style="top:40px;right:50px" aria-hidden="true"></div>
     <div class="spark" style="top:84px;right:130px;background:var(--lamp);animation-delay:-1.2s" aria-hidden="true"></div>
     <div class="fly" aria-hidden="true"><i></i><i></i></div>
+    <div class="moon" aria-hidden="true"></div>
+    <span class="star" style="top:22px;left:38%" aria-hidden="true"></span>
+    <span class="star" style="top:48px;left:58%;animation-delay:-1s" aria-hidden="true"></span>
+    <span class="star" style="top:18px;left:76%;animation-delay:-2s" aria-hidden="true"></span>
+    <span class="star" style="top:70px;left:30%;animation-delay:-.5s" aria-hidden="true"></span>
+    <span class="star" style="top:86px;left:88%;animation-delay:-1.6s" aria-hidden="true"></span>
+    <span class="star" style="top:40px;left:92%;animation-delay:-2.4s" aria-hidden="true"></span>
+    <span class="ffly" style="left:18%;bottom:64px" aria-hidden="true"></span>
+    <span class="ffly" style="left:52%;bottom:92px;animation-delay:-2s" aria-hidden="true"></span>
+    <span class="ffly" style="left:80%;bottom:70px;animation-delay:-4s" aria-hidden="true"></span>
     <div class="hill" aria-hidden="true"></div>
     <div class="scroller" id="scroller"><div class="row" id="row"></div></div>
     <button class="scene-label" id="sceneLabel" data-act="go-town"></button>
@@ -391,6 +447,19 @@ h2{margin:0;font-size:20px;font-weight:600}
   </div>
 </div>
 
+<div class="overlay" id="musicSheet" hidden>
+  <div class="backdrop" data-act="close-music"></div>
+  <div class="sheet" role="dialog" aria-labelledby="mTitle">
+    <div class="sheet-head">
+      <h2 id="mTitle">Garden music</h2>
+      <button type="button" class="icon-btn" data-act="close-music" aria-label="Close">
+        <svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"></path></svg>
+      </button>
+    </div>
+    <div id="mBody"></div>
+  </div>
+</div>
+
 <div class="overlay center" id="monthEnd" hidden>
   <div class="backdrop" data-act="close-month"></div>
   <div class="timer-card" role="dialog" aria-labelledby="meHead">
@@ -413,7 +482,8 @@ function rr(a,b){return a+Math.random()*(b-a)}
 function pick(a){return a[Math.floor(Math.random()*a.length)]}
 var MIX={music:{on:true,vol:.8},birds:{on:true,vol:.8},wind:{on:true,vol:.5},stream:{on:false,vol:.4}};
 function GM_L(id){return MIX[id]}
-function gmNight(){var h=new Date().getHours();return h>=19||h<6}
+/* phone clock: day 6:00-17:59, dusk 18:00-19:59, night 20:00-5:59 */
+function timeMode(){var h=new Date().getHours();return (h>=20||h<6)?'night':(h>=18?'dusk':'day')}
 var reduce=false;try{reduce=matchMedia('(prefers-reduced-motion: reduce)').matches}catch(e){}
 function showCall(pan,kind){
   if(document.hidden)return;var sc=document.getElementById('scene');if(!sc)return;
@@ -430,7 +500,7 @@ function showCall(pan,kind){
 /* ---------- audio engine ---------- */
 function Engine(){
   var AC=window.AudioContext||window.webkitAudioContext;
-  var c=new AC(),self=this;this.c=c;this.playing=false;this.night=gmNight();
+  var c=new AC(),self=this;this.c=c;this.playing=false;this.mode=timeMode();this.night=this.mode==='night';this.dusk=this.mode==='dusk';
   var master=c.createGain();master.gain.value=0;
   var comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.4;
   master.connect(comp);comp.connect(c.destination);this.master=master;
@@ -482,11 +552,12 @@ Engine.prototype.babble=function(t){
 /* chords: warm and slow. day = bright major colours, night = softer and lower */
 var DAY=[[48,55,64,71,74],[45,52,60,67,71],[41,48,57,64,67],[43,50,59,62,69],[45,52,60,64,72],[41,48,55,64,69]];
 var NIGHT=[[45,52,60,64,71],[41,48,57,60,67],[43,50,55,62,65],[40,47,55,59,67]];
+var DUSK=[[41,48,57,64,69],[43,50,57,62,71],[45,52,60,64,67],[40,47,55,62,67],[38,45,53,60,69]];
 function mtof(m){return 440*Math.pow(2,(m-69)/12)}
 Engine.prototype.chord=function(t){
-  if(!GM_L('music').on)return;var c=this.c,set=this.night?NIGHT:DAY,ch=set[this.chordIdx%set.length];this.chordIdx++;
-  var dur=this.night?14:11,self=this;
-  var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=this.night?900:1500;lp.Q.value=.3;
+  if(!GM_L('music').on)return;var c=this.c,set=this.night?NIGHT:(this.dusk?DUSK:DAY),ch=set[this.chordIdx%set.length];this.chordIdx++;
+  var dur=this.night?14:(this.dusk?12.5:11),self=this;
+  var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=this.night?900:(this.dusk?1150:1500);lp.Q.value=.3;
   var out=c.createGain();out.gain.value=1;lp.connect(out);out.connect(this.bus.music);this.send(out,.55);
   ch.forEach(function(m,i){
     [0,1].forEach(function(v){
@@ -570,7 +641,10 @@ Engine.prototype.tick=function(){
   var c=this.c,now=c.currentTime,ahead=now+.25;
   if(now>=this.nextChord-1.5){var d=this.chord(Math.max(now+.05,this.nextChord))||10;this.nextChord=Math.max(now,this.nextChord)+d*(this.night?.78:.72)}
   if(now>=this.nextPluck){this.pluck(now+.1);this.nextPluck=now+rr(this.night?4:2.2,this.night?9:5.5)}
-  if(!this.night){
+  if(this.dusk){
+    if(GM_L('birds').on&&now>=this.nextBird){this.bird(now+.1);this.nextBird=now+rr(6,13)}
+    if(GM_L('birds').on&&now>=this.nextCricket){this.crickets(now+.05);this.nextCricket=now+rr(2.5,5.5)}
+  } else if(!this.night){
     if(GM_L('birds').on&&now>=this.nextBird){this.bird(now+.1);this.nextBird=now+rr(2.5,7)}
     if(GM_L('birds').on&&this.pendingAnswer&&now>=this.pendingAnswer.t-.2){var pa=this.pendingAnswer;this.pendingAnswer=null;this.answer(pa)}
   } else {
@@ -584,7 +658,7 @@ Engine.prototype.answer=function(pa){
   for(var i=0;i<Math.floor(rr(2,5));i++){this.tone(v,x,base*rr(.85,1.15),base*rr(.8,1.25),rr(.06,.12),.1);x+=rr(.1,.18)}
   setTimeout(function(){if(self.playing)showCall(pa.pan,'bird')},Math.max(0,(t-this.c.currentTime)*1000));
 };
-Engine.prototype.setNight=function(v){this.night=v;this.nextChord=this.c.currentTime+.5;this.nextOwl=0;this.nextBird=this.c.currentTime+1.5;applyLevels()};
+Engine.prototype.setMode=function(m){this.mode=m;this.night=m==='night';this.dusk=m==='dusk';this.nextChord=this.c.currentTime+.5;this.nextOwl=0;this.nextBird=this.c.currentTime+1.5;applyLevels()};
 Engine.prototype.start=function(){
   var self=this,c=this.c;if(c.state==='suspended')c.resume();this.playing=true;
   this.master.gain.cancelScheduledValues(c.currentTime);this.master.gain.setValueAtTime(this.master.gain.value,c.currentTime);this.master.gain.linearRampToValueAtTime(.9,c.currentTime+2.5);
@@ -597,10 +671,10 @@ Engine.prototype.stop=function(){
   clearInterval(this.timer);setTimeout(function(){if(!self.playing)c.suspend()},1400);
 };
 
-var E=null,nightT=null;
+var E=null,modeT=null;
 function applyLevels(){
   if(!E)return;var c=E.c;
-  Object.keys(MIX).forEach(function(id){var l=MIX[id],lvl=l.on?l.vol:0;if(id==='birds'&&E.night)lvl*=.8;if(id==='wind')lvl*=E.night?.7:1;
+  Object.keys(MIX).forEach(function(id){var l=MIX[id],lvl=l.on?l.vol:0;if(id==='birds'&&(E.night||E.dusk))lvl*=E.night?.8:.9;if(id==='wind')lvl*=E.night?.7:1;
     E.bus[id].gain.setTargetAtTime(lvl,c.currentTime,.4)});
 }
 window.GardenMusic={
@@ -608,13 +682,14 @@ window.GardenMusic={
     try{
       if(!E){E=new Engine();applyLevels()}
       if(!E.playing)E.start();
-      clearInterval(nightT);nightT=setInterval(function(){var n=gmNight();if(E&&n!==E.night)E.setNight(n)},60000);
+      clearInterval(modeT);modeT=setInterval(function(){var m=timeMode();if(E&&m!==E.mode)E.setMode(m)},30000);
       return true;
     }catch(e){return false}
   },
-  stop:function(){if(E&&E.playing)E.stop();clearInterval(nightT)},
+  stop:function(){if(E&&E.playing)E.stop();clearInterval(modeT)},
   playing:function(){return !!(E&&E.playing)},
-  isNight:gmNight
+  timeMode:timeMode,
+  setMix:function(m){if(!m)return;Object.keys(MIX).forEach(function(id){var s=m[id];if(s){MIX[id].on=!!s.on;if(typeof s.vol==='number')MIX[id].vol=Math.max(0,Math.min(1,s.vol))}});applyLevels()}
 };
 })();
 </script>
@@ -663,7 +738,7 @@ function quickLook(){
 function bigLook(){var c=rnd(PAL);return{color:c,roof:ROOF[c],peak:Math.random()<0.5,name:CNAME[c]+' '+rnd(['Tower','Hall','Studio','Heights'])}}
 
 /* ---------- state ---------- */
-function blank(){return{v:1,tasks:[],bonus:0,sound:true,updatedAt:0}}
+function blank(){return{v:1,tasks:[],bonus:0,sound:true,music:false,mix:{music:{on:true,vol:.8},birds:{on:true,vol:.8},wind:{on:true,vol:.5},stream:{on:false,vol:.4}},updatedAt:0}}
 var S=blank();
 try{var raw=localStorage.getItem(LS);if(raw){var p=JSON.parse(raw);if(p&&Array.isArray(p.tasks))S=Object.assign(blank(),p)}}catch(e){}
 var ui={view:'today',sel:null,menu:null,confirmDel:null,justAdded:null,justDone:null,justStepTask:null,coinBump:false};
@@ -933,9 +1008,10 @@ function render(){
   var cn=$('coinN'),nc=String(coins());
   if(cn.textContent!==nc){cn.textContent=nc;if(ui.coinBump){var cb=$('coins');cb.classList.remove('bump');void cb.offsetWidth;cb.classList.add('bump')}}
   $('coins').setAttribute('aria-label',nc+' coins');
+  applyTime();
   var mOn=!!S.music;
   $('musicBtn').innerHTML=MUSIC_IC;$('musicBtn').setAttribute('aria-pressed',mOn?'true':'false');
-  $('musicBtn').setAttribute('aria-label',mOn?'Garden music is on. Turn it off':'Play garden music');
+  $('musicBtn').setAttribute('aria-label',mOn?'Garden music is on. Open music settings':'Open garden music');
   $('soundBtn').innerHTML=S.sound?SOUND_ON:SOUND_OFF;
   $('soundBtn').setAttribute('aria-label',S.sound?'Sound is on. Turn sound off':'Sound is off. Turn sound on');
   $('scene').classList.toggle('tall',ui.view==='town');
@@ -999,13 +1075,19 @@ var act={
   'close-month':function(){$('monthEnd').hidden=true;ui.view='today';render()},
   'go-build':function(b,id){ui.view='today';ui.menu=null;render();var c=document.querySelector('.step.next[data-id="'+id+'"]');if(c){c.scrollIntoView({block:'center',behavior:reduce?'auto':'smooth'});setTimeout(function(){c.focus({preventScroll:true})},300)}},
   sound:function(){S.sound=!S.sound;persist();render();if(S.sound)sfx.ding()},
-  music:function(){
+  music:function(){sfx.tap();renderMusic();$('musicSheet').hidden=false},
+  'close-music':function(){$('musicSheet').hidden=true},
+  'm-play':function(){
     var G=window.GardenMusic;if(!G)return;
-    S.music=!S.music;persist();render();
-    if(S.music){
-      if(G.start())toast(G.isNight()?'Night garden: crickets, an owl and soft music':'Garden music on: birds, breeze and soft music');
-      else{S.music=false;persist();render();toast('Music is not available in this browser')}
-    } else G.stop();
+    S.music=!S.music;persist();
+    if(S.music){G.setMix(S.mix);if(!G.start()){S.music=false;persist();toast('Music is not available in this browser')}}
+    else G.stop();
+    render();renderMusic();
+  },
+  'm-sw':function(b){
+    var l=S.mix[b.dataset.l];if(!l)return;l.on=!l.on;persist();
+    if(window.GardenMusic)window.GardenMusic.setMix(S.mix);
+    b.setAttribute('aria-checked',l.on?'true':'false');var r=$('ml-'+b.dataset.l);if(r)r.disabled=!l.on;
   },
   'open-sheet':openSheet,'close-sheet':closeSheet,
   'switch':function(){setSwitch($('bdSwitch').getAttribute('aria-checked')!=='true');sfx.tap()},
@@ -1014,7 +1096,48 @@ var act={
   five:openTimer,'close-timer':closeTimer,'t-go':timerGo
 };
 document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
-document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!$('sheet').hidden)closeSheet();if(!$('timer').hidden)closeTimer();if(!$('monthEnd').hidden){$('monthEnd').hidden=true;render()}}});
+/* ---------- music sheet ---------- */
+var MODES={
+  day:{name:'Daytime garden',hours:'6 AM to 6 PM',what:'Birds, breeze and soft music',ic:'<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="#FFC93C"></circle><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="#FFE08A" stroke-width="2" stroke-linecap="round"></path></svg>'},
+  dusk:{name:'Dusk garden',hours:'6 PM to 8 PM',what:'Evening birds, first crickets, warm music',ic:'<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 17a7 7 0 0114 0z" fill="#FF8A1F"></path><path d="M2 20h20M12 3v3M4.5 9l2 1.5M19.5 9l-2 1.5" stroke="#FFE08A" stroke-width="2" stroke-linecap="round"></path></svg>'},
+  night:{name:'Night garden',hours:'8 PM to 6 AM',what:'Crickets, an owl and quiet music',ic:'<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><path d="M20 14.5A8 8 0 019.5 4a8 8 0 1010.5 10.5z" fill="#FFF6CF"></path></svg>'}
+};
+var LAYER_UI=[
+  {id:'music',name:'Soft music',color:'#E8263A',icon:'<path d="M9 18V5l11-2v13" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"></path><circle cx="6.5" cy="18" r="2.6" fill="#fff"></circle><circle cx="17.5" cy="16" r="2.6" fill="#fff"></circle>'},
+  {id:'birds',name:{day:'Birds',dusk:'Evening birds and crickets',night:'Crickets and owl'},color:'#FF8A1F',icon:'<path d="M3 13c4 0 6-3 9-3 3 0 4 2 6 2l3-2-1 4c-1 3-4 5-8 5-5 0-8-3-9-6z" fill="#fff"></path>'},
+  {id:'wind',name:'Gentle breeze',color:'#13B5A6',icon:'<path d="M3 9h11a3 3 0 10-3-3M3 14h15a3 3 0 11-3 3M3 19h7" fill="none" stroke="#fff" stroke-width="2.2" stroke-linecap="round"></path>'},
+  {id:'stream',name:'Little stream',color:'#2F7DF6',icon:'<path d="M2 8c3 0 3-2 5-2s2 2 5 2 3-2 5-2 2 2 5 2M2 14c3 0 3-2 5-2s2 2 5 2 3-2 5-2 2 2 5 2M2 20c3 0 3-2 5-2s2 2 5 2 3-2 5-2 2 2 5 2" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round"></path>'}
+];
+function renderMusic(){
+  var m=tm(),M=MODES[m],on=!!S.music;
+  var h='<div class="mode-card '+m+'"><span class="mode-ic">'+M.ic+'</span><span><b>'+M.name+'</b><small>'+M.hours+' · '+M.what+'</small></span></div>';
+  h+='<button class="m-play'+(on?' on':'')+'" data-act="m-play" aria-pressed="'+on+'">'+(on?'<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 5h4v14H7zM13 5h4v14h-4z" fill="#fff"></path></svg>Pause music':'<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M7 4.5v15l12-7.5z" fill="#fff"></path></svg>Play music')+'</button>';
+  h+='<div class="m-layers">'+LAYER_UI.map(function(L){
+    var st=S.mix[L.id],nm=typeof L.name==='string'?L.name:L.name[m];
+    return '<div class="m-layer"><span class="m-ic" style="background:'+L.color+'"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">'+L.icon+'</svg></span><div class="m-main"><label class="m-name" for="ml-'+L.id+'">'+nm+'</label><input type="range" id="ml-'+L.id+'" min="0" max="100" value="'+Math.round(st.vol*100)+'" data-l="'+L.id+'"'+(st.on?'':' disabled')+'></div><button class="switch" role="switch" aria-checked="'+st.on+'" aria-label="'+nm+'" data-act="m-sw" data-l="'+L.id+'"><span class="knob"></span></button></div>';
+  }).join('')+'</div>';
+  h+='<p class="m-note">Your mix is saved. The garden follows your phone\'s clock: day, dusk and night.</p>';
+  $('mBody').innerHTML=h;
+}
+var mixSaveT=null;
+$('mBody').addEventListener('input',function(e){
+  var id=e.target.dataset&&e.target.dataset.l;if(!id||!S.mix[id])return;
+  S.mix[id].vol=e.target.value/100;if(window.GardenMusic)window.GardenMusic.setMix(S.mix);
+  clearTimeout(mixSaveT);mixSaveT=setTimeout(persist,300);
+});
+if(window.GardenMusic)window.GardenMusic.setMix(S.mix);
+
+/* ---------- day, dusk and night ---------- */
+function tm(){var h=new Date().getHours();return (h>=20||h<6)?'night':(h>=18?'dusk':'day')}
+var lastMode=tm();
+function applyTime(){var m=tm(),sc=$('scene');sc.classList.toggle('dusk',m==='dusk');sc.classList.toggle('night',m==='night')}
+setInterval(function(){
+  var m=tm();if(m===lastMode)return;lastMode=m;applyTime();
+  if(!$('musicSheet').hidden)renderMusic();
+  toast(m==='night'?'Night falls over your town. The windows are glowing.':(m==='dusk'?'Dusk is coming. The sky is turning pink.':'Good morning! The birds are awake.'));
+},30000);
+
+document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!$('musicSheet').hidden)$('musicSheet').hidden=true;if(!$('sheet').hidden)closeSheet();if(!$('timer').hidden)closeTimer();if(!$('monthEnd').hidden){$('monthEnd').hidden=true;render()}}});
 document.addEventListener('visibilitychange',function(){
   var G=window.GardenMusic;
   if(document.visibilityState==='visible'){render();checkMonth(townItems());if(S.music&&G&&musicArmed)G.start()}
@@ -1023,12 +1146,11 @@ document.addEventListener('visibilitychange',function(){
 /* browsers only allow sound after a tap, so remembered music starts on the first touch */
 var musicArmed=false;
 function armMusic(e){
-  if(e&&e.target&&e.target.closest&&e.target.closest('#musicBtn'))return;
   musicArmed=true;document.removeEventListener('pointerdown',armMusic,true);
-  if(S.music&&window.GardenMusic)window.GardenMusic.start();
+  if(S.music&&window.GardenMusic){window.GardenMusic.setMix(S.mix);window.GardenMusic.start()}
 }
 document.addEventListener('pointerdown',armMusic,true);
-$('musicBtn').addEventListener('pointerdown',function(){musicArmed=true;document.removeEventListener('pointerdown',armMusic,true)});
+
 
 /* ---------- add sheet ---------- */
 var sheetSteps=['','',''];
