@@ -341,6 +341,37 @@ h2{margin:0;font-size:20px;font-weight:600}
 .rep-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:10px 12px;box-shadow:0 2px 0 var(--line)}
 .rep-card.over{opacity:.65}
 .rep-ic{width:42px;height:42px;border-radius:13px;background:#FFE3E6;color:var(--red-ink);display:grid;place-items:center;flex-shrink:0}
+/* living town */
+.bg-trees{position:absolute;left:0;right:0;bottom:84px;height:48px;pointer-events:none;transition:filter 1.6s}
+.scene.tall .bg-trees{bottom:96px}
+.bg-tree{position:absolute;bottom:0;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 5s ease-in-out infinite}
+.bg-tree svg{display:block}
+.scene.dusk .bg-trees{filter:brightness(.82) saturate(.95)}
+.scene.night .bg-trees{filter:brightness(.5) saturate(.8)}
+.amb{position:absolute;inset:0;pointer-events:none;overflow:hidden;border-radius:inherit}
+.amb.top{z-index:1}
+.amb-it{position:absolute;left:0;top:0;will-change:transform}
+.bird-in{animation:bbob .9s ease-in-out infinite}
+.bird-in.flip svg,.duck-in.flip svg,.fish-amb .flip svg{transform:scaleX(-1)}
+.bw{transform-box:fill-box;transform-origin:50% 100%;animation:bflap .32s ease-in-out infinite alternate}
+.duck-in{animation:dbob 2.2s ease-in-out infinite}
+.splash .ring{position:absolute;left:0;top:0;width:28px;height:10px;border:2px solid #fff;border-radius:50%;opacity:0;box-sizing:border-box;animation:ring2 .8s ease-out forwards}
+.splash .ring.r2{animation-delay:.15s}
+.splash .drop{position:absolute;width:5px;height:5px;border-radius:50%;background:#BDE3FF;border:1.4px solid #4A1F12;left:11px;top:0;animation:spl .6s ease-out forwards}
+.splash .drop.d2{--sx:8px}
+.splash .drop.d1{--sx:-8px}
+.shoot{position:absolute;left:-22px;top:-22px;width:44px;height:44px;border:0;background:none;padding:0;cursor:pointer;pointer-events:auto}
+.sh-rot{position:absolute;left:22px;top:22px;transform:rotate(153deg);transform-origin:0 0}
+.sh-tail{position:absolute;left:-58px;top:-1.5px;width:58px;height:3px;border-radius:2px;background:linear-gradient(90deg,transparent,#FFF3B8)}
+.sh-head{position:absolute;left:-4px;top:-4px;width:8px;height:8px;border-radius:50%;background:#FFF9D8;box-shadow:0 0 10px 4px rgba(255,236,150,.9)}
+.cat .co{display:none}
+.cat.awake .ce{display:none}
+.cat.awake .co{display:inline}
+.cat.awake .breath{animation:catStretch 1.7s ease-in-out}
+.cat.awake .zz{animation:none;opacity:0}
+.cat.awake .tail{animation:catFlick .5s ease-in-out 3}
+.cat-pop{position:absolute;left:50%;top:-16px;font-size:13px;font-weight:700;color:#E8263A;opacity:0;pointer-events:none;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 -1px 0 #fff}
+.cat.awake .cat-pop{animation:catPop 2.4s ease-out}
 /* the stream behind the town */
 .river{position:absolute;left:0;right:0;bottom:64px;width:100%;height:34px;pointer-events:none}
 .scene.tall .river{bottom:70px;height:40px}
@@ -393,6 +424,15 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
 @keyframes cardIn{0%{transform:translateY(16px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes bgsway{0%,100%{transform:translateX(-50%) rotate(-1.5deg)}50%{transform:translateX(-50%) rotate(1.5deg)}}
+@keyframes bbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
+@keyframes bflap{from{transform:scaleY(1)}to{transform:scaleY(-.55)}}
+@keyframes dbob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-1.5px) rotate(2deg)}}
+@keyframes ring2{0%{transform:scale(.3);opacity:1}100%{transform:scale(1.6);opacity:0}}
+@keyframes spl{0%{transform:translate(0,0);opacity:1}100%{transform:translate(var(--sx,0),-12px);opacity:0}}
+@keyframes catStretch{0%{transform:scale(1,1)}25%{transform:scale(1.14,.84)}55%{transform:scale(.95,1.12)}75%{transform:scale(1.03,.97)}100%{transform:scale(1,1)}}
+@keyframes catFlick{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg)}}
+@keyframes catPop{0%{opacity:0;transform:translate(-50%,6px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
 @keyframes rflow{to{stroke-dashoffset:-84}}
 @keyframes kspin{to{transform:rotate(360deg)}}
 @keyframes ksway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
@@ -456,6 +496,7 @@ h2{margin:0;font-size:20px;font-weight:600}
     <span class="ffly" style="left:52%;bottom:92px;animation-delay:-2s" aria-hidden="true"></span>
     <span class="ffly" style="left:80%;bottom:70px;animation-delay:-4s" aria-hidden="true"></span>
     <div class="hill" aria-hidden="true"></div>
+    <div class="bg-trees" id="bgTrees" aria-hidden="true"></div>
     <svg class="river" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true">
       <path class="r-water" d="M0 12C50 2 110 24 200 14S330 2 400 12V36C330 46 250 26 200 36S60 48 0 34Z" stroke="#4A1F12" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>
       <path class="r-deep" d="M0 22C60 14 120 32 200 24S340 14 400 22V30C330 38 250 22 200 30S60 40 0 30Z"></path>
@@ -465,7 +506,9 @@ h2{margin:0;font-size:20px;font-weight:600}
       <ellipse class="r-stone" cx="30" cy="36" rx="9" ry="4" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse><ellipse class="r-stone" cx="44" cy="38" rx="5" ry="3" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse>
       <ellipse class="r-stone" cx="300" cy="9" rx="8" ry="3.5" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse><ellipse class="r-stone" cx="180" cy="38" rx="6" ry="3" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse>
     </svg>
+    <div class="amb" id="amb" aria-hidden="true"></div>
     <div class="scroller" id="scroller"><div class="row" id="row"></div></div>
+    <div class="amb top" id="ambTop"></div>
     <button class="scene-label" id="sceneLabel" data-act="go-town"></button>
   </section>
 
@@ -1131,13 +1174,14 @@ function catHTML(dk,n){
       '<path d="M14 58C6 58 5 47 10 41C9 29 12 17 18 11L24 3L32 14C37 13 43 13 48 14L55 4L61 17C74 15 93 16 103 26C113 35 115 48 111 56C109 58 105 58 101 58Z" fill="'+fur+'" stroke="'+ink+'" stroke-width="3.6" stroke-linejoin="round"></path>'+
       '<path d="M22 12L24 7L28 13Z M51 13L55 8L57 15Z" fill="'+st+'"></path>'+
       '<path d="M35 18V23M41 18V24M47 18V23M70 19V28M80 19V30M90 21V31M99 27V34" stroke="'+st+'" stroke-width="4" stroke-linecap="round" fill="none"></path>'+
-      '<path d="M25 38Q30 42 35 38M44 38Q49 42 54 38" stroke="'+face+'" stroke-width="2.8" stroke-linecap="round" fill="none"></path>'+
+      '<path class="ce" d="M25 38Q30 42 35 38M44 38Q49 42 54 38" stroke="'+face+'" stroke-width="2.8" stroke-linecap="round" fill="none"></path>'+
+      '<g class="co"><ellipse cx="30" cy="37.5" rx="3.2" ry="4" fill="'+face+'"></ellipse><ellipse cx="49" cy="37.5" rx="3.2" ry="4" fill="'+face+'"></ellipse><circle cx="31.2" cy="36" r="1.2" fill="#fff"></circle><circle cx="50.2" cy="36" r="1.2" fill="#fff"></circle></g>'+
       '<ellipse cx="39.5" cy="44" rx="2.6" ry="1.8" fill="'+face+'"></ellipse>'+
     '</g>'+
     '<g class="tail"><path d="M78 59C76 48 90 43 104 49" stroke="'+ink+'" stroke-width="13" stroke-linecap="round" fill="none"></path><path d="M78 59C76 48 90 43 104 49" stroke="'+fur+'" stroke-width="7" stroke-linecap="round" fill="none"></path><path d="M88 47.5V52M96 46.5V51" stroke="'+st+'" stroke-width="3" stroke-linecap="round"></path></g>'+
     '<path d="M55 59C55 51 63 49 69 51C74 52 74 59 70 59Z" fill="'+fur+'" stroke="'+ink+'" stroke-width="3.2" stroke-linejoin="round"></path>'+
   '</svg>';
-  return '<button class="cat" data-act="cat" data-day="'+dk+'" aria-label="Sleeping cat. A quiet day">'+svg+'<span class="zz" aria-hidden="true">z</span><span class="zz z2" aria-hidden="true">z</span><span class="zz z3" aria-hidden="true">Z</span></button>';
+  return '<button class="cat" data-act="cat" data-day="'+dk+'" aria-label="Sleeping cat. A quiet day">'+svg+'<span class="zz" aria-hidden="true">z</span><span class="zz z2" aria-hidden="true">z</span><span class="zz z3" aria-hidden="true">Z</span><span class="cat-pop" aria-hidden="true">mew!</span></button>';
 }
 var lastRow='',lastMk='';
 function renderTown(items,mk){
@@ -1302,7 +1346,7 @@ var act={
       ui.justAdded=t.id;ui.justDone=t.id;ui.coinBump=true;
       var L=t.look,tag=L.rarity==='epic'?'EPIC ':(L.rarity==='rare'?'RARE ':'');
       toast('+'+R.quick+' coins · New '+tag+(L.type==='house'?'place':'flower')+': <b>'+esc(L.name)+'</b>');
-      commit();scrollTownEnd();
+      commit();scrollTownEnd();setTimeout(function(){wakeCats()},150);
     } else {
       t.done=false;t.doneAt=null;t.doneDay=null;sfx.undo();commit();
     }
@@ -1320,7 +1364,7 @@ var act={
         sfx.step();burst(b,t.look.color,{coins:'+'+R.step});
         toast('Floor '+b2+' of '+t.steps.length+' added to <b>'+esc(t.look.name)+'</b>');
       }
-      commit();scrollTownEnd();
+      commit();scrollTownEnd();setTimeout(function(){wakeCats()},150);
     } else {
       s.done=false;s.doneAt=null;if(t.done){t.done=false;t.doneAt=null;t.doneDay=null}sfx.undo();commit();
     }
@@ -1335,6 +1379,7 @@ var act={
   view:function(b){sfx.tap();ui.view=b.dataset.v;ui.month=monthKey();ui.menu=null;render();window.scrollTo(0,0);scrollTownEnd()},
   month:function(b){if(!b.dataset.m)return;sfx.tap();ui.month=b.dataset.m;ui.sel=null;render();window.scrollTo({top:0,behavior:reduce?'auto':'smooth'})},
   cat:function(b){
+    wakeCats(b);
     vib(15);var c=ctx();if(c){var n=c.currentTime;tone(c,'sine',420,640,n,.12,.18);tone(c,'sine',640,430,n+.12,.22,.16)}
     var dk=b.dataset.day,p=dk.split('-'),d=new Date(+p[0],+p[1]-1,+p[2]);
     toast('Shh, this cat is napping. '+esc(d.toLocaleDateString(undefined,{weekday:'long',month:'short',day:'numeric'}))+' was a quiet day, and that is okay.');
@@ -1362,6 +1407,12 @@ var act={
   'add-step':function(){readSteps();if(sheetSteps.length<MAX_STEPS){sheetSteps.push({id:null,text:'',done:false,doneAt:null});renderSteps(sheetSteps.length-1)}},
   'rm-step':function(b){readSteps();sheetSteps.splice(+b.dataset.i,1);if(sheetSteps.length<1)sheetSteps.push({id:null,text:'',done:false,doneAt:null});renderSteps()},
   edit:function(b,id){openSheet(id)},
+  shoot:function(b){
+    if(b.dataset.got)return;b.dataset.got='1';
+    S.bonus=(S.bonus||0)+1;ui.coinBump=true;burst(b,'#FFE08A',{coins:'+1'});
+    var c=ctx();if(c){var n=c.currentTime;[1047,1319,1568,2093].forEach(function(f,i){tone(c,'triangle',f,0,n+i*.07,.5,.16)})}vib(15);
+    toast('You caught a shooting star! <b>+1 coin</b>');commit();
+  },
   'rp-freq':function(b){RP.freq=b.dataset.v;if(RP.freq==='weekly'&&!RP.days.length)RP.days=[new Date().getDay()];sfx.tap();renderRepeat()},
   'rp-n':function(b){RP.every=Math.max(1,Math.min(99,RP.every+(+b.dataset.d)));renderRepeat()},
   'rp-day':function(b){var v=+b.dataset.v,i=RP.days.indexOf(v);if(i>=0){if(RP.days.length>1)RP.days.splice(i,1)}else RP.days.push(v);renderRepeat()},
@@ -1829,9 +1880,143 @@ function finishFive(){
   renderTimer();commit();
 }
 
+/* ---------- living town: birds, ducks, fish, falling leaves, shooting stars, background trees ---------- */
+var AMB={on:!reduce};
+function season(){var m=new Date().getMonth();return (m>=8&&m<=10)?'autumn':(m===11||m<=1)?'winter':(m<=4)?'spring':'summer'}
+function sceneEl(){return $('scene')}
+function sceneW(){return sceneEl().clientWidth}
+function sceneH(){return sceneEl().clientHeight}
+function riverMidY(){
+  var sc=sceneEl().getBoundingClientRect(),rv=document.querySelector('.river').getBoundingClientRect();
+  return rv.top-sc.top+rv.height*0.5;
+}
+function ambAdd(html,top,cls){var d=document.createElement('div');d.className='amb-it '+(cls||'');d.innerHTML=html;(top?$('ambTop'):$('amb')).appendChild(d);return d}
+function later(fn,min,max){setTimeout(fn,(min+Math.random()*(max-min))*1000)}
+function canRun(){return AMB.on&&!document.hidden}
+
+/* background trees along the hill, colored by the season */
+function bgTrees(){
+  var s=season(),cols={autumn:['#FF8A1F','#E8263A','#FFC93C','#1FBF6B','#FF8A1F','#C8102E'],winter:['#1C8E57','#1C8E57','#1C8E57','#1C8E57'],spring:['#FF8FB8','#1FBF6B','#FFB8D1','#1FBF6B','#FF8FB8'],summer:['#1FBF6B','#13A35A','#4CCB7E','#1FBF6B']}[s];
+  var spots=[[3,1,'round'],[13,.8,'pine'],[24,1.1,'round'],[38,.75,'round'],[47,.95,'pine'],[60,1.05,'round'],[72,.8,'pine'],[83,1,'round'],[93,.85,'round']];
+  var h='';
+  spots.forEach(function(p,i){
+    var c=cols[i%cols.length],w=Math.round(30*p[1]),hh=Math.round(42*p[1]),svg;
+    if(p[2]==='pine'){
+      svg='<svg width="'+w+'" height="'+hh+'" viewBox="0 0 30 42"><rect x="13" y="32" width="4" height="9" fill="#7A4A26" stroke="'+INK+'" stroke-width="1.6"></rect><path d="M15 2L27 20H21L28 33H2L9 20H3Z" fill="'+(s==='winter'?'#1C8E57':'#13A35A')+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path>'+(s==='winter'?'<path d="M15 2L20 9.5Q15 12 10 9.5Z M8 20Q15 24 22 20L21 20 25 26Q15 29 5 26Z" fill="#FFFFFF"></path>':'')+'</svg>';
+    } else {
+      svg='<svg width="'+w+'" height="'+hh+'" viewBox="0 0 30 42"><rect x="13" y="26" width="4" height="15" rx="1.5" fill="#7A4A26" stroke="'+INK+'" stroke-width="1.6"></rect><circle cx="15" cy="15" r="13" fill="'+INK+'"></circle><circle cx="15" cy="15" r="11" fill="'+(s==='winter'?'#E9F3FF':c)+'"></circle><path d="M8 11q3-5 8-5" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"></path>'+(s==='spring'&&i%2===0?'<circle cx="10" cy="17" r="1.8" fill="#fff"></circle><circle cx="19" cy="12" r="1.8" fill="#fff"></circle>':'')+'</svg>';
+    }
+    h+='<span class="bg-tree" style="left:'+p[0]+'%;animation-delay:-'+(i*.6).toFixed(1)+'s">'+svg+'</span>';
+  });
+  $('bgTrees').innerHTML=h;
+}
+
+/* birds glide across the sky now and then; at dusk they fly home in a V */
+var BIRD_COLS=['#FFFFFF','#7FB8FF','#FF8FB8','#FFC93C','#E8263A'];
+function birdSVG(c){return '<svg width="26" height="20" viewBox="0 0 40 30"><path d="M9 16l-8-5 3 9z" fill="'+c+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="18" cy="18" rx="11" ry="7.5" fill="'+c+'" stroke="'+INK+'" stroke-width="2.4"></ellipse><circle cx="27" cy="12" r="6" fill="'+c+'" stroke="'+INK+'" stroke-width="2.4"></circle><path d="M32 10.5l6 2-6 2z" fill="#FF8A1F" stroke="'+INK+'" stroke-width="1.5" stroke-linejoin="round"></path><circle cx="28.6" cy="11" r="1.4" fill="'+INK+'"></circle><path class="bw" d="M11 16q6-13 15-2z" fill="'+c+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path></svg>'}
+function spawnBirds(){
+  if(canRun()&&tm()!=='night'){
+    var dusk=tm()==='dusk',n=dusk?(3+Math.floor(Math.random()*3)):(Math.random()<.6?1:2+Math.floor(Math.random()*2));
+    var ltr=Math.random()<.6,W=sceneW(),y0=18+Math.random()*Math.max(20,sceneH()*.28),dur=(9+Math.random()*5)*1000,c=rnd(BIRD_COLS);
+    for(var i=0;i<n;i++){
+      var ox=dusk?-i*24:-i*(30+Math.random()*30),oy=dusk?(i%2?1:-1)*Math.ceil(i/2)*12:(Math.random()*26-13);
+      if(dusk&&i>0)ox=-Math.ceil(i/2)*26;
+      var el=ambAdd('<div class="bird-in'+(ltr?'':' flip')+'" style="animation-delay:-'+(i*.13).toFixed(2)+'s">'+birdSVG(dusk?'#2A1414':c)+'</div>',false,'bird-amb');
+      var sx=ltr?-40+ox:W+40-ox,ex=ltr?W+60+ox:-60-ox,yy=y0+oy;
+      var kf=[];for(var k=0;k<=6;k++){var t=k/6;kf.push({transform:'translate('+(sx+(ex-sx)*t)+'px,'+(yy+Math.sin(t*Math.PI*2)*8)+'px)'})}
+      (function(el){var a=el.animate(kf,{duration:dur,easing:'linear'});a.onfinish=function(){el.remove()}})(el);
+    }
+  }
+  later(spawnBirds,22,48);
+}
+
+/* ducks paddle slowly along the stream in the day and at dusk */
+function duckSVG(){return '<svg width="34" height="25" viewBox="0 0 44 32"><path d="M6 19l-5-6 7 2z" fill="#FFE08A" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="20" cy="21" rx="15" ry="8.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></ellipse><path d="M12 19q6-6 12 0q-6 4-12 0z" fill="#FFC93C" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><circle cx="31" cy="11" r="7.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></circle><ellipse cx="39" cy="12.5" rx="4.5" ry="2.4" fill="#FF8A1F" stroke="'+INK+'" stroke-width="1.6"></ellipse><circle cx="32.5" cy="9.5" r="1.5" fill="'+INK+'"></circle><path d="M5 27q15 5 32 0" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".9"></path></svg>'}
+var duckCount=0;
+function spawnDuck(){
+  if(canRun()&&tm()!=='night'&&duckCount<2){
+    duckCount++;
+    var ltr=Math.random()<.5,W=sceneW(),y=riverMidY()-20,dur=(38+Math.random()*20)*1000;
+    var el=ambAdd('<div class="duck-in'+(ltr?'':' flip')+'">'+duckSVG()+'</div>',false,'duck-amb');
+    var sx=ltr?-40:W+10,ex=ltr?W+10:-40;
+    var a=el.animate([{transform:'translate('+sx+'px,'+y+'px)'},{transform:'translate('+ex+'px,'+(y+1)+'px)'}],{duration:dur,easing:'linear'});
+    a.onfinish=function(){el.remove();duckCount--};
+  }
+  later(spawnDuck,8,26);
+}
+
+/* a fish jumps out of the stream with a little splash */
+function fishSVG(c){return '<svg width="24" height="15" viewBox="0 0 30 18"><path d="M21 9l8-7v14z" fill="'+c+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="13" cy="9" rx="10" ry="6" fill="'+c+'" stroke="'+INK+'" stroke-width="2.2"></ellipse><path d="M12 3.5q3 2.5 0 5" fill="none" stroke="'+INK+'" stroke-width="1.4" stroke-opacity=".5"></path><circle cx="7.5" cy="7.5" r="1.4" fill="'+INK+'"></circle></svg>'}
+function splash(x,y){
+  var el=ambAdd('<span class="ring"></span><span class="ring r2"></span><span class="drop d1"></span><span class="drop d2"></span>',false,'splash');
+  el.style.transform='translate('+(x-14)+'px,'+(y-6)+'px)';setTimeout(function(){el.remove()},900);
+}
+function spawnFish(){
+  if(canRun()){
+    var W=sceneW(),x=30+Math.random()*(W-90),y=riverMidY()-6,c=rnd(['#FF8A1F','#FF5FA2','#FFC93C','#7FB8FF']),ltr=Math.random()<.5,dx=ltr?34:-34;
+    var el=ambAdd('<div class="'+(ltr?'':'flip')+'">'+fishSVG(c)+'</div>',false,'fish-amb');
+    splash(x+12,y+8);
+    var a=el.animate([
+      {transform:'translate('+x+'px,'+y+'px) rotate('+(ltr?-50:50)+'deg)',opacity:0},
+      {transform:'translate('+(x+dx*.15)+'px,'+(y-14)+'px) rotate('+(ltr?-35:35)+'deg)',opacity:1,offset:.15},
+      {transform:'translate('+(x+dx*.5)+'px,'+(y-32)+'px) rotate(0deg)',opacity:1,offset:.5},
+      {transform:'translate('+(x+dx*.85)+'px,'+(y-14)+'px) rotate('+(ltr?35:-35)+'deg)',opacity:1,offset:.85},
+      {transform:'translate('+(x+dx)+'px,'+y+'px) rotate('+(ltr?50:-50)+'deg)',opacity:0}
+    ],{duration:1100,easing:'ease-in-out'});
+    a.onfinish=function(){el.remove();splash(x+dx+12,y+8)};
+  }
+  later(spawnFish,10,24);
+}
+
+/* the season drifts down: leaves in autumn, snow in winter, blossom petals in spring */
+var LEAF_COLS=['#FF8A1F','#E8263A','#FFC93C','#C2410C'];
+var fallCount=0;
+function particle(){
+  var s=season();
+  if(s==='autumn'){var c=rnd(LEAF_COLS);return '<svg width="14" height="16" viewBox="0 0 20 22"><path d="M10 1C17 5 18 13 10 20C2 13 3 5 10 1Z" fill="'+c+'" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><path d="M10 4V18M10 10l-3-2M10 13l3-2" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".45" fill="none"></path></svg>'}
+  if(s==='winter')return '<svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.6" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".5"></circle></svg>';
+  if(s==='spring')return '<svg width="11" height="13" viewBox="0 0 12 14"><path d="M6 1C10 3 11 9 6 13C1 9 2 3 6 1Z" fill="#FFB8D1" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".6"></path></svg>';
+  return null;
+}
+function spawnFall(){
+  var html=particle();
+  if(html&&canRun()&&fallCount<8){
+    fallCount++;
+    var W=sceneW(),H=sceneH(),x=Math.random()*W,dur=(6+Math.random()*4)*1000,drift=(Math.random()*60-30),spin=(Math.random()<.5?-1:1)*(240+Math.random()*300);
+    var el=ambAdd(html,false,'fall');var kf=[];
+    for(var k=0;k<=6;k++){var t=k/6;kf.push({transform:'translate('+(x+drift*t+Math.sin(t*Math.PI*3)*16)+'px,'+(-20+(H-44)*t)+'px) rotate('+(spin*t)+'deg)',opacity:t>.9?0:1})}
+    var a=el.animate(kf,{duration:dur,easing:'linear'});a.onfinish=function(){el.remove();fallCount--};
+  }
+  later(spawnFall,.9,1.8);
+}
+
+/* shooting stars at night: tap one in time for a bonus coin */
+function spawnStar(){
+  if(canRun()&&tm()==='night'){
+    var W=sceneW(),x=W*(.45+Math.random()*.45),y=10+Math.random()*50;
+    var el=ambAdd('<button class="shoot" data-act="shoot" aria-label="Shooting star. Tap it for a bonus coin"><span class="sh-rot"><span class="sh-tail"></span><span class="sh-head"></span></span></button>',true,'star-amb');
+    var a=el.animate([{transform:'translate('+x+'px,'+y+'px)',opacity:0},{transform:'translate('+(x-30)+'px,'+(y+15)+'px)',opacity:1,offset:.15},{transform:'translate('+(x-190)+'px,'+(y+95)+'px)',opacity:0}],{duration:1500,easing:'ease-in'});
+    a.onfinish=function(){el.remove()};
+  }
+  later(spawnStar,14,34);
+}
+
+/* cats wake up, stretch and blink when you smash something */
+function wakeCats(only){
+  var cats=only?[only]:Array.prototype.slice.call(document.querySelectorAll('#row .cat')).reverse();
+  cats.forEach(function(c,i){setTimeout(function(){c.classList.remove('awake');void c.offsetWidth;c.classList.add('awake');setTimeout(function(){c.classList.remove('awake')},2600)},Math.min(i,4)*120)});
+}
+
+function startAmbient(){
+  bgTrees();
+  if(!AMB.on)return;
+  later(spawnBirds,3,8);later(spawnDuck,1,4);later(spawnFish,5,12);later(spawnFall,1,2);later(spawnStar,4,10);
+}
+
 if(syncSeries())persist();
 render();
 checkMonth(townItems());
+startAmbient();
 if(T&&T.kind==='task'&&T.running&&Date.now()>=T.end)timeUp();
 else if(T&&T.kind==='task')setTimeout(noteTimer,1500);
 })();
