@@ -342,9 +342,14 @@ h2{margin:0;font-size:20px;font-weight:600}
 .rep-card.over{opacity:.65}
 .rep-ic{width:42px;height:42px;border-radius:13px;background:#FFE3E6;color:var(--red-ink);display:grid;place-items:center;flex-shrink:0}
 /* living town */
-.bg-trees{position:absolute;left:0;right:0;bottom:84px;height:48px;pointer-events:none;transition:filter 1.6s}
+.bg-trees{position:absolute;left:0;right:0;bottom:84px;height:90px;pointer-events:none;transition:filter 1.6s}
 .scene.tall .bg-trees{bottom:96px}
-.bg-tree{position:absolute;bottom:0;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 5s ease-in-out infinite}
+.bg-tree{position:absolute;bottom:-6px;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 6s ease-in-out infinite}
+.bg-tree .canopy{transform-box:view-box;transform-origin:60px 90px;animation:canopySway 4.5s ease-in-out infinite}
+.duck-family{display:flex;align-items:flex-end;gap:4px}
+.duck-family .duckling{display:block;animation:dbob 1.6s ease-in-out infinite;margin-bottom:1px}
+.duck-family .mom{display:block;animation:dbob 2.2s ease-in-out infinite}
+.duck-family svg{display:block}
 .bg-tree svg{display:block}
 .scene.dusk .bg-trees{filter:brightness(.82) saturate(.95)}
 .scene.night .bg-trees{filter:brightness(.5) saturate(.8)}
@@ -372,6 +377,16 @@ h2{margin:0;font-size:20px;font-weight:600}
 .cat.awake .tail{animation:catFlick .5s ease-in-out 3}
 .cat-pop{position:absolute;left:50%;top:-16px;font-size:13px;font-weight:700;color:#E8263A;opacity:0;pointer-events:none;transform:translateX(-50%);white-space:nowrap;text-shadow:0 1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 -1px 0 #fff}
 .cat.awake .cat-pop{animation:catPop 2.4s ease-out}
+/* winter: snowy ground and an icy stream */
+.scene.s-winter{--fence:#9A5B2E}
+.scene.s-winter .hill{background:#EEF6FF;box-shadow:inset 0 3px 0 rgba(74,31,18,.15)}
+.scene.s-winter .row{background:linear-gradient(to top,#DCEAF7 0 40px,transparent 40px)}
+.scene.s-winter.night .hill{background:#9AA9C9}
+.scene.s-winter.night .row{background:linear-gradient(to top,#7F8FB2 0 40px,transparent 40px)}
+.scene.s-winter.dusk .hill{background:#E4D3EE}
+.scene.s-winter.dusk .row{background:linear-gradient(to top,#D5C2E6 0 40px,transparent 40px)}
+.scene.s-winter .r-water{fill:#A9D6FF}
+.scene.s-winter .r-deep{fill:#8CC4F5}
 /* the stream behind the town */
 .river{position:absolute;left:0;right:0;bottom:64px;width:100%;height:34px;pointer-events:none}
 .scene.tall .river{bottom:70px;height:40px}
@@ -424,7 +439,8 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
 @keyframes cardIn{0%{transform:translateY(16px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
-@keyframes bgsway{0%,100%{transform:translateX(-50%) rotate(-1.5deg)}50%{transform:translateX(-50%) rotate(1.5deg)}}
+@keyframes bgsway{0%,100%{transform:translateX(-50%) rotate(-.8deg)}50%{transform:translateX(-50%) rotate(.8deg)}}
+@keyframes canopySway{0%,100%{transform:rotate(-1.5deg)}50%{transform:rotate(1.5deg)}}
 @keyframes bbob{0%,100%{transform:translateY(0)}50%{transform:translateY(-3px)}}
 @keyframes bflap{from{transform:scaleY(1)}to{transform:scaleY(-.55)}}
 @keyframes dbob{0%,100%{transform:translateY(0) rotate(-2deg)}50%{transform:translateY(-1.5px) rotate(2deg)}}
@@ -1894,21 +1910,148 @@ function ambAdd(html,top,cls){var d=document.createElement('div');d.className='a
 function later(fn,min,max){setTimeout(fn,(min+Math.random()*(max-min))*1000)}
 function canRun(){return AMB.on&&!document.hidden}
 
-/* background trees along the hill, colored by the season */
-function bgTrees(){
-  var s=season(),cols={autumn:['#FF8A1F','#E8263A','#FFC93C','#1FBF6B','#FF8A1F','#C8102E'],winter:['#1C8E57','#1C8E57','#1C8E57','#1C8E57'],spring:['#FF8FB8','#1FBF6B','#FFB8D1','#1FBF6B','#FF8FB8'],summer:['#1FBF6B','#13A35A','#4CCB7E','#1FBF6B']}[s];
-  var spots=[[3,1,'round'],[13,.8,'pine'],[24,1.1,'round'],[38,.75,'round'],[47,.95,'pine'],[60,1.05,'round'],[72,.8,'pine'],[83,1,'round'],[93,.85,'round']];
-  var h='';
-  spots.forEach(function(p,i){
-    var c=cols[i%cols.length],w=Math.round(30*p[1]),hh=Math.round(42*p[1]),svg;
-    if(p[2]==='pine'){
-      svg='<svg width="'+w+'" height="'+hh+'" viewBox="0 0 30 42"><rect x="13" y="32" width="4" height="9" fill="#7A4A26" stroke="'+INK+'" stroke-width="1.6"></rect><path d="M15 2L27 20H21L28 33H2L9 20H3Z" fill="'+(s==='winter'?'#1C8E57':'#13A35A')+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path>'+(s==='winter'?'<path d="M15 2L20 9.5Q15 12 10 9.5Z M8 20Q15 24 22 20L21 20 25 26Q15 29 5 26Z" fill="#FFFFFF"></path>':'')+'</svg>';
-    } else {
-      svg='<svg width="'+w+'" height="'+hh+'" viewBox="0 0 30 42"><rect x="13" y="26" width="4" height="15" rx="1.5" fill="#7A4A26" stroke="'+INK+'" stroke-width="1.6"></rect><circle cx="15" cy="15" r="13" fill="'+INK+'"></circle><circle cx="15" cy="15" r="11" fill="'+(s==='winter'?'#E9F3FF':c)+'"></circle><path d="M8 11q3-5 8-5" fill="none" stroke="#fff" stroke-opacity=".45" stroke-width="2" stroke-linecap="round"></path>'+(s==='spring'&&i%2===0?'<circle cx="10" cy="17" r="1.8" fill="#fff"></circle><circle cx="19" cy="12" r="1.8" fill="#fff"></circle>':'')+'</svg>';
-    }
-    h+='<span class="bg-tree" style="left:'+p[0]+'%;animation-delay:-'+(i*.6).toFixed(1)+'s">'+svg+'</span>';
+/* ---------- seasonal trees on the hill: layered fluffy tops, real trunks and branches ---------- */
+var SEASON_PAL={
+  spring:{a:['#F27BAE','#FFAACB','#FFD6E6'],g:['#2E9E4F','#4CC066','#9BE07A'],trunk:'#7A4A2E'},
+  summer:{a:['#2E9E4F','#4CC066','#9BE07A'],g:['#24874A','#3DB15A','#8AD86E'],trunk:'#8B5A33'},
+  autumn:{a:['#D9541E','#FF8A3D','#FFC46B'],b:['#B5122E','#E8414A','#FF8A7A'],c:['#C98A12','#FFC93C','#FFE38A'],trunk:'#7A4A2E'},
+  winter:{trunk:'#6B4A3A'}
+};
+function limb(d,w){return '<path d="'+d+'" fill="none" stroke="'+INK+'" stroke-width="'+(w+3)+'" stroke-linecap="round" stroke-linejoin="round"></path><path d="'+d+'" fill="none" stroke="TRUNK" stroke-width="'+w+'" stroke-linecap="round" stroke-linejoin="round"></path>'}
+function snowLimb(d,w){return '<path d="'+d+'" fill="none" stroke="#FFFFFF" stroke-width="'+Math.max(2,w*.55)+'" stroke-linecap="round" transform="translate(0,-'+(w*.45)+')"></path>'}
+function canopy(cl,cols){
+  var o='',b='',m='',l='';
+  cl.forEach(function(c){
+    o+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+(c[2]+3)+'" fill="'+INK+'"></circle>';
+    b+='<circle cx="'+c[0]+'" cy="'+c[1]+'" r="'+c[2]+'" fill="'+cols[0]+'"></circle>';
+    m+='<circle cx="'+(c[0]-c[2]*.14)+'" cy="'+(c[1]-c[2]*.18)+'" r="'+(c[2]*.76)+'" fill="'+cols[1]+'"></circle>';
+    l+='<circle cx="'+(c[0]-c[2]*.3)+'" cy="'+(c[1]-c[2]*.36)+'" r="'+(c[2]*.4)+'" fill="'+cols[2]+'"></circle>';
   });
-  $('bgTrees').innerHTML=h;
+  return o+b+m+l;
+}
+function blossoms(pts){return pts.map(function(p){return '<g transform="translate('+p[0]+','+p[1]+')"><circle r="2.6" cx="0" cy="-2.6" fill="#fff"></circle><circle r="2.6" cx="2.5" cy="-.8" fill="#fff"></circle><circle r="2.6" cx="1.5" cy="2.1" fill="#fff"></circle><circle r="2.6" cx="-1.5" cy="2.1" fill="#fff"></circle><circle r="2.6" cx="-2.5" cy="-.8" fill="#fff"></circle><circle r="1.4" fill="#FFC93C"></circle></g>'}).join('')}
+function grass(s){
+  if(s==='winter')return '<ellipse cx="60" cy="126" rx="30" ry="5" fill="#FFFFFF" stroke="'+INK+'" stroke-width="2"></ellipse>';
+  var g=s==='autumn'?'#7DB843':'#3DB15A';
+  return '<path d="M36 127l3-7 2 7M42 127l2-9 3 9M78 127l2-8 3 8M84 127l3-6 2 6" fill="'+g+'" stroke="'+INK+'" stroke-width="1.6" stroke-linejoin="round"></path>';
+}
+/* four tree shapes: wide oak, tall round, umbrella, and tiered blossom */
+var TREES={
+  oak:{trunk:'M52 127C54 113 55 101 54 90L66 90C65 101 66 113 68 127Z',roots:'M44 127C50 124 52 120 53 114M76 127C70 124 68 120 67 114',
+    limbs:['M57 92C52 82 44 76 34 72','M63 92C68 82 76 76 86 72','M60 92C60 80 60 66 60 54'],
+    twigs:['M34 72L26 66M34 72L30 62','M86 72L94 66M86 72L90 62','M60 54L52 44M60 54L68 44M60 54L60 40'],
+    cl:[[60,46,22],[38,58,17],[82,58,17],[46,34,15],[74,34,15],[60,64,15],[26,68,11],[94,68,11]],leaf:[28,92,30,72]},
+  round:{trunk:'M55 127C56 113 56 99 55 86L65 86C64 99 64 113 65 127Z',roots:'M48 127C53 124 54 120 55 116M72 127C67 124 66 120 65 116',
+    limbs:['M60 88C60 74 60 60 60 46','M60 96C54 88 48 82 42 78','M60 92C66 84 72 80 78 76'],
+    twigs:['M60 46L54 36M60 46L66 36M42 78L36 72M78 76L84 70'],
+    cl:[[60,42,19],[60,62,19],[45,52,14],[75,52,14],[60,26,14],[48,70,11],[72,70,11]],leaf:[36,84,22,70]},
+  umbrella:{trunk:'M56 127C57 115 57 106 56 96L64 96C63 106 63 115 64 127Z',roots:'M48 127C53 124 55 120 56 115M72 127C67 124 65 120 64 115',
+    limbs:['M58 98C52 86 44 76 32 68','M62 98C68 86 76 76 88 68','M60 98C60 86 59 74 58 62'],
+    twigs:['M32 68L22 62M32 68L28 58','M88 68L98 62M88 68L92 58','M58 62L50 54M58 62L66 54'],
+    cl:[[60,52,16],[40,58,14],[80,58,14],[24,62,10],[96,62,10],[50,44,13],[70,44,13]],leaf:[18,102,40,64]},
+  tier:{trunk:'M54 127C56 112 57 100 57 88L64 88C64 100 65 112 67 127Z',roots:'M45 127C51 124 53 120 55 114M76 127C70 124 67 120 66 114',
+    limbs:['M60 90C60 70 61 52 62 36','M60 92C52 86 44 82 36 80','M61 86C70 80 78 76 88 74','M61 70C54 64 48 60 40 58','M62 60C70 56 78 54 86 54'],
+    twigs:['M36 80L28 76M88 74L96 70M40 58L32 54M86 54L94 50'],
+    cl:[[50,34,11],[62,29,13],[74,34,10],[30,58,9],[42,55,12],[54,59,9],[72,56,9],[84,53,12],[96,57,8],[30,80,10],[42,82,8],[78,76,10],[90,74,9]],leaf:[22,100,24,80]}
+};
+function treeSVG(kind,s,colKey){
+  var T=TREES[kind],P=SEASON_PAL[s],tr=P.trunk,h='';
+  var cols=s==='autumn'?(P[colKey]||P.a):(s==='spring'?(kind==='tier'?P.a:P.g):P.a);
+  h+=grass(s);
+  h+=('<path d="'+T.trunk+'" fill="TRUNK" stroke="'+INK+'" stroke-width="3" stroke-linejoin="round"></path>'+
+     '<path d="'+T.roots+'" fill="none" stroke="'+INK+'" stroke-width="2.6" stroke-linecap="round"></path>'+
+     '<path d="M58 120V104M62 112V98" stroke="'+INK+'" stroke-opacity=".3" stroke-width="1.6" stroke-linecap="round"></path>').replace(/TRUNK/g,tr);
+  T.limbs.forEach(function(d){h+=limb(d,4.2).replace(/TRUNK/g,tr)});
+  if(s==='winter'){
+    T.twigs.forEach(function(d){h+=limb(d,2.2).replace(/TRUNK/g,tr)});
+    T.limbs.forEach(function(d){h+=snowLimb(d,4.2)});T.twigs.forEach(function(d){h+=snowLimb(d,2.2)});
+    return h;
+  }
+  h+='<g class="canopy">'+canopy(T.cl,cols);
+  if(s==='spring'&&kind!=='tier'){var pts=T.cl.slice(0,6).map(function(c){return [c[0]+c[2]*.2,c[1]+c[2]*.15]});h+=blossoms(pts)}
+  if(s==='summer'&&kind==='oak')h+='<circle cx="44" cy="58" r="3.4" fill="#E8263A" stroke="'+INK+'" stroke-width="1.5"></circle><circle cx="72" cy="40" r="3.4" fill="#E8263A" stroke="'+INK+'" stroke-width="1.5"></circle><circle cx="84" cy="62" r="3.4" fill="#E8263A" stroke="'+INK+'" stroke-width="1.5"></circle>';
+  h+='</g>';
+  return h;
+}
+/* which tree goes where: small and far on the left (the sun lives there), big in the middle and right */
+var TREE_SPOTS=[[7,.46,'round','c'],[19,.6,'umbrella','a'],[33,.7,'oak','b'],[47,.56,'tier','a'],[61,.74,'round','c'],[75,.62,'oak','a'],[88,.7,'tier','b']];
+function bgTrees(){
+  var s=season(),h='';
+  TREE_SPOTS.forEach(function(p,i){
+    var kind=s==='winter'&&i%3===1?'round':p[2],w=Math.round(120*p[1]),hh=Math.round(130*p[1]);
+    h+='<span class="bg-tree" data-i="'+i+'" style="left:'+p[0]+'%;animation-delay:-'+(i*.7).toFixed(1)+'s"><svg width="'+w+'" height="'+hh+'" viewBox="0 0 120 130" aria-hidden="true">'+treeSVG(kind,s,p[3])+'</svg></span>';
+  });
+  $('bgTrees').innerHTML=h;$('bgTrees').dataset.season=s;
+  ['spring','summer','autumn','winter'].forEach(function(x){sceneEl().classList.toggle('s-'+x,x===s)});
+}
+
+/* now and then something drops from a tree: leaves in autumn, petals in spring, a green leaf in summer, snow in winter */
+function dropHTML(s,col){
+  if(s==='autumn')return '<svg width="13" height="15" viewBox="0 0 20 22"><path d="M10 1C17 5 18 13 10 20C2 13 3 5 10 1Z" fill="'+col+'" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><path d="M10 4V18M10 10l-3-2M10 13l3-2" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".45" fill="none"></path></svg>';
+  if(s==='spring')return '<svg width="10" height="12" viewBox="0 0 12 14"><path d="M6 1C10 3 11 9 6 13C1 9 2 3 6 1Z" fill="#FFC2D9" stroke="'+INK+'" stroke-width="1.1" stroke-opacity=".6"></path></svg>';
+  if(s==='summer')return '<svg width="12" height="14" viewBox="0 0 20 22"><path d="M10 1C17 5 18 13 10 20C2 13 3 5 10 1Z" fill="#4CC066" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><path d="M10 4V18" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".45"></path></svg>';
+  return '<svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.6" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".5"></circle></svg>';
+}
+function dropFromTree(){
+  var s=season(),trees=document.querySelectorAll('#bgTrees .bg-tree');
+  if(canRun()&&trees.length){
+    var sc=sceneEl().getBoundingClientRect(),H=sceneH();
+    var pool=Array.prototype.slice.call(trees).filter(function(t){var r=t.getBoundingClientRect();return r.right>sc.left&&r.left<sc.right});
+    if(s==='spring')pool=pool.filter(function(t){var i=+t.dataset.i;return TREE_SPOTS[i][2]==='tier'})||pool;
+    var tree=rnd(pool.length?pool:Array.prototype.slice.call(trees)),r=tree.getBoundingClientRect(),i=+tree.dataset.i;
+    var pal=SEASON_PAL.autumn[TREE_SPOTS[i][3]]||SEASON_PAL.autumn.a;
+    var n=s==='summer'?1:(1+Math.floor(Math.random()*3));
+    for(var k=0;k<n;k++)(function(k){setTimeout(function(){
+      var x=r.left-sc.left+r.width*(.18+Math.random()*.64),y=r.top-sc.top+r.height*(.25+Math.random()*.3),gy=H-36-Math.random()*20;
+      var el=ambAdd(dropHTML(s,rnd(pal)),false,'fall'),dur=(4.5+Math.random()*2.5)*1000,drift=(Math.random()*50-25),spin=(Math.random()<.5?-1:1)*(220+Math.random()*260),kf=[];
+      for(var j=0;j<=8;j++){var t=j/8;kf.push({transform:'translate('+(x+drift*t+Math.sin(t*Math.PI*2.5)*12)+'px,'+(y+(gy-y)*t)+'px) rotate('+(spin*t)+'deg)',opacity:t>.88?0:1})}
+      var a=el.animate(kf,{duration:dur,easing:'cubic-bezier(.3,.1,.6,1)'});a.onfinish=function(){el.remove()};
+    },k*450)})(k);
+  }
+  var gap={autumn:[5,11],spring:[4,9],summer:[16,30],winter:[10,18]}[s];
+  later(dropFromTree,gap[0],gap[1]);
+}
+/* in winter a few soft snowflakes also drift down from the sky */
+function snowfall(){
+  if(canRun()&&season()==='winter'){
+    var W=sceneW(),H=sceneH(),x=Math.random()*W,el=ambAdd(dropHTML('winter'),false,'fall'),dur=(7+Math.random()*4)*1000,kf=[];
+    for(var j=0;j<=6;j++){var t=j/6;kf.push({transform:'translate('+(x+Math.sin(t*Math.PI*2)*14)+'px,'+(-10+(H-40)*t)+'px)',opacity:t>.9?0:1})}
+    var a=el.animate(kf,{duration:dur,easing:'linear'});a.onfinish=function(){el.remove()};
+  }
+  later(snowfall,1.2,2.4);
+}
+
+/* a mother duck and her ducklings float along with the stream */
+function duckSVG(){return '<svg width="34" height="25" viewBox="0 0 44 32"><path d="M6 19l-5-6 7 2z" fill="#FFE08A" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="20" cy="21" rx="15" ry="8.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></ellipse><path d="M12 19q6-6 12 0q-6 4-12 0z" fill="#FFC93C" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><circle cx="31" cy="11" r="7.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></circle><ellipse cx="39" cy="12.5" rx="4.5" ry="2.4" fill="#FF8A1F" stroke="'+INK+'" stroke-width="1.6"></ellipse><circle cx="32.5" cy="9.5" r="1.5" fill="'+INK+'"></circle><path d="M5 27q15 5 32 0" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".9"></path></svg>'}
+function ducklingSVG(){return '<svg width="19" height="15" viewBox="0 0 26 20"><ellipse cx="11" cy="13" rx="8.5" ry="5.2" fill="#FFF3A6" stroke="'+INK+'" stroke-width="2"></ellipse><circle cx="18" cy="7" r="4.8" fill="#FFF3A6" stroke="'+INK+'" stroke-width="2"></circle><path d="M22 6.5l3.6 1.2-3.6 1.4z" fill="#FF8A1F" stroke="'+INK+'" stroke-width="1.2" stroke-linejoin="round"></path><circle cx="19" cy="6" r="1.1" fill="'+INK+'"></circle><path d="M4 17q8 3 15 0" fill="none" stroke="#FFFFFF" stroke-width="1.6" stroke-linecap="round" opacity=".9"></path></svg>'}
+/* a soft, low quack for mom and tiny peeps for the babies (only when sound is on) */
+function quack(n){
+  var c=ctx();if(!c)return;var t0=c.currentTime+.02;
+  for(var i=0;i<(n||1);i++){
+    var t=t0+i*.22,o=c.createOscillator(),f=c.createBiquadFilter(),g=c.createGain();
+    o.type='sawtooth';o.frequency.setValueAtTime(420,t);o.frequency.exponentialRampToValueAtTime(300,t+.13);
+    f.type='bandpass';f.frequency.value=1150;f.Q.value=3.5;
+    g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(.05,t+.02);g.gain.exponentialRampToValueAtTime(.0001,t+.16);
+    o.connect(f);f.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.18);
+  }
+}
+function peep(n){
+  var c=ctx();if(!c)return;var t0=c.currentTime+.05;
+  for(var i=0;i<(n||2);i++){var t=t0+i*.14,o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(2300,t);o.frequency.exponentialRampToValueAtTime(2900,t+.07);g.gain.setValueAtTime(0.0001,t);g.gain.linearRampToValueAtTime(.02,t+.01);g.gain.exponentialRampToValueAtTime(.0001,t+.09);o.connect(g);g.connect(c.destination);o.start(t);o.stop(t+.1)}
+}
+var familyOut=false;
+function spawnDucks(){
+  if(canRun()&&tm()!=='night'&&!familyOut){
+    familyOut=true;
+    var kids=2+Math.floor(Math.random()*3),inner='';
+    for(var k=0;k<kids;k++)inner+='<span class="duckling" style="animation-delay:-'+(k*.35).toFixed(2)+'s">'+ducklingSVG()+'</span>';
+    inner+='<span class="mom">'+duckSVG()+'</span>';
+    var W=sceneW(),el=ambAdd('<div class="duck-family">'+inner+'</div>',false,'duck-amb'),y=riverMidY()-21,fw=34+kids*23,dur=(36+Math.random()*14)*1000;
+    var a=el.animate([{transform:'translate('+(-fw-10)+'px,'+y+'px)'},{transform:'translate('+(W+10)+'px,'+(y+1)+'px)'}],{duration:dur,easing:'linear'});
+    if(!document.hidden&&!reduce){setTimeout(function(){if(familyOut)quack(2)},dur*.22);setTimeout(function(){if(familyOut)peep(3)},dur*.3);setTimeout(function(){if(familyOut&&Math.random()<.6)quack(1)},dur*.62)}
+    a.onfinish=function(){el.remove();familyOut=false};
+  }
+  later(spawnDucks,14,34);
 }
 
 /* birds glide across the sky now and then; at dusk they fly home in a V */
@@ -1928,21 +2071,6 @@ function spawnBirds(){
     }
   }
   later(spawnBirds,22,48);
-}
-
-/* ducks paddle slowly along the stream in the day and at dusk */
-function duckSVG(){return '<svg width="34" height="25" viewBox="0 0 44 32"><path d="M6 19l-5-6 7 2z" fill="#FFE08A" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="20" cy="21" rx="15" ry="8.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></ellipse><path d="M12 19q6-6 12 0q-6 4-12 0z" fill="#FFC93C" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><circle cx="31" cy="11" r="7.5" fill="#FFE08A" stroke="'+INK+'" stroke-width="2.4"></circle><ellipse cx="39" cy="12.5" rx="4.5" ry="2.4" fill="#FF8A1F" stroke="'+INK+'" stroke-width="1.6"></ellipse><circle cx="32.5" cy="9.5" r="1.5" fill="'+INK+'"></circle><path d="M5 27q15 5 32 0" fill="none" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" opacity=".9"></path></svg>'}
-var duckCount=0;
-function spawnDuck(){
-  if(canRun()&&tm()!=='night'&&duckCount<2){
-    duckCount++;
-    var ltr=Math.random()<.5,W=sceneW(),y=riverMidY()-20,dur=(38+Math.random()*20)*1000;
-    var el=ambAdd('<div class="duck-in'+(ltr?'':' flip')+'">'+duckSVG()+'</div>',false,'duck-amb');
-    var sx=ltr?-40:W+10,ex=ltr?W+10:-40;
-    var a=el.animate([{transform:'translate('+sx+'px,'+y+'px)'},{transform:'translate('+ex+'px,'+(y+1)+'px)'}],{duration:dur,easing:'linear'});
-    a.onfinish=function(){el.remove();duckCount--};
-  }
-  later(spawnDuck,8,26);
 }
 
 /* a fish jumps out of the stream with a little splash */
@@ -1968,28 +2096,6 @@ function spawnFish(){
   later(spawnFish,10,24);
 }
 
-/* the season drifts down: leaves in autumn, snow in winter, blossom petals in spring */
-var LEAF_COLS=['#FF8A1F','#E8263A','#FFC93C','#C2410C'];
-var fallCount=0;
-function particle(){
-  var s=season();
-  if(s==='autumn'){var c=rnd(LEAF_COLS);return '<svg width="14" height="16" viewBox="0 0 20 22"><path d="M10 1C17 5 18 13 10 20C2 13 3 5 10 1Z" fill="'+c+'" stroke="'+INK+'" stroke-width="1.8" stroke-linejoin="round"></path><path d="M10 4V18M10 10l-3-2M10 13l3-2" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".45" fill="none"></path></svg>'}
-  if(s==='winter')return '<svg width="9" height="9" viewBox="0 0 10 10"><circle cx="5" cy="5" r="3.6" fill="#FFFFFF" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".5"></circle></svg>';
-  if(s==='spring')return '<svg width="11" height="13" viewBox="0 0 12 14"><path d="M6 1C10 3 11 9 6 13C1 9 2 3 6 1Z" fill="#FFB8D1" stroke="'+INK+'" stroke-width="1.2" stroke-opacity=".6"></path></svg>';
-  return null;
-}
-function spawnFall(){
-  var html=particle();
-  if(html&&canRun()&&fallCount<8){
-    fallCount++;
-    var W=sceneW(),H=sceneH(),x=Math.random()*W,dur=(6+Math.random()*4)*1000,drift=(Math.random()*60-30),spin=(Math.random()<.5?-1:1)*(240+Math.random()*300);
-    var el=ambAdd(html,false,'fall');var kf=[];
-    for(var k=0;k<=6;k++){var t=k/6;kf.push({transform:'translate('+(x+drift*t+Math.sin(t*Math.PI*3)*16)+'px,'+(-20+(H-44)*t)+'px) rotate('+(spin*t)+'deg)',opacity:t>.9?0:1})}
-    var a=el.animate(kf,{duration:dur,easing:'linear'});a.onfinish=function(){el.remove();fallCount--};
-  }
-  later(spawnFall,.9,1.8);
-}
-
 /* shooting stars at night: tap one in time for a bonus coin */
 function spawnStar(){
   if(canRun()&&tm()==='night'){
@@ -2010,7 +2116,7 @@ function wakeCats(only){
 function startAmbient(){
   bgTrees();
   if(!AMB.on)return;
-  later(spawnBirds,3,8);later(spawnDuck,1,4);later(spawnFish,5,12);later(spawnFall,1,2);later(spawnStar,4,10);
+  later(spawnBirds,3,8);later(spawnDucks,2,6);later(spawnFish,5,12);later(dropFromTree,3,6);later(snowfall,1,2);later(spawnStar,4,10);
 }
 
 if(syncSeries())persist();
