@@ -1320,7 +1320,7 @@ function noteRow(){
   var st=noteState();
   if(st==='unsupported')return '';
   if(st==='granted')return '<div class="n-row on"><span>'+BELL+(noteErr?'Could not show the notification: '+esc(noteErr):'This timer shows in your notifications')+'</span><button class="n-link" data-act="n-test">Send a test</button></div>';
-  if(st==='denied')return '<div class="n-row off"><span>'+BELL+'Notifications are blocked for this app. In Chrome, tap <b>⋮</b> › <b>Settings</b> › <b>Site settings</b> › <b>Notifications</b>, and allow <b>cyberosos.github.io</b>. Then reopen the app.</span></div>';
+  if(st==='denied')return '<div class="n-row off"><span>'+BELL+'Notifications are blocked for this app. In Chrome, tap <b>⋮</b> › <b>Settings</b> › <b>Site settings</b> › <b>Notifications</b>, and allow <b>'+esc(location.hostname)+'</b>. Then reopen the app.</span></div>';
   return '<button class="n-row ask" data-act="n-ask">'+BELL+'Show this timer in my notifications</button>';
 }
 /* shows or refreshes the running-timer notification: minutes left and the time it ends */
