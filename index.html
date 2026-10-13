@@ -160,6 +160,8 @@ h1{margin:0;font-size:32px;font-weight:700;line-height:1.05;text-wrap:balance}
 .floors{display:flex;flex-direction:column;align-items:center}
 .floor{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px;width:58px;height:22px;box-sizing:border-box;padding:6px 7px;border:2.5px solid #4A1F12;border-bottom:none;background-image:linear-gradient(90deg,transparent 72%,rgba(0,0,0,.09) 72%)}
 .floors .floor:not(.ghost):last-child{border-bottom:2.5px solid #4A1F12;height:24px}
+.floor.float{opacity:.5;border-style:dashed;border-bottom:2.5px dashed #4A1F12;margin-bottom:7px;animation:floatF 2.8s ease-in-out infinite}
+.floors .floor.float:last-child{margin-bottom:12px}
 .floor .win{border:1.6px solid #4A1F12;border-radius:2px;background:#BDE3FF;animation:none}
 .scene.dusk .floor .win{background:#FFE08A;box-shadow:0 0 4px 1px rgba(255,214,90,.6)}
 .scene.night .floor .win{background:#FFE08A;box-shadow:0 0 7px 2px rgba(255,214,90,.9)}
@@ -341,10 +343,16 @@ h2{margin:0;font-size:20px;font-weight:600}
 .rep-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:10px 12px;box-shadow:0 2px 0 var(--line)}
 .rep-card.over{opacity:.65}
 .rep-ic{width:42px;height:42px;border-radius:13px;background:#FFE3E6;color:var(--red-ink);display:grid;place-items:center;flex-shrink:0}
+/* tiny far-away stars */
+.tstars{position:absolute;inset:0;pointer-events:none}
+.tstar{position:absolute;border-radius:50%;background:#fff;opacity:0;transition:opacity 1.6s}
+.scene.dusk .tstar{opacity:calc(var(--o) * .3)}
+.scene.night .tstar{opacity:var(--o);animation:tinyTw var(--d) ease-in-out infinite;animation-delay:var(--dl)}
+@keyframes tinyTw{0%,100%{opacity:var(--o)}50%{opacity:calc(var(--o) * .25)}}
 /* living town */
-.bg-trees{position:absolute;left:0;right:0;bottom:84px;height:90px;pointer-events:none;transition:filter 1.6s}
+.bg-trees{position:absolute;left:0;right:0;bottom:84px;height:50px;pointer-events:none;transition:filter 1.6s}
 .scene.tall .bg-trees{bottom:96px}
-.bg-tree{position:absolute;bottom:-6px;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 6s ease-in-out infinite}
+.bg-tree{position:absolute;bottom:-3px;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 6s ease-in-out infinite}
 .bg-tree .canopy{transform-box:view-box;transform-origin:60px 90px;animation:canopySway 4.5s ease-in-out infinite}
 .duck-family{display:flex;align-items:flex-end;gap:4px}
 .duck-family .duckling{display:block;animation:dbob 1.6s ease-in-out infinite;margin-bottom:1px}
@@ -450,6 +458,7 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes catFlick{0%,100%{transform:rotate(0)}50%{transform:rotate(-14deg)}}
 @keyframes catPop{0%{opacity:0;transform:translate(-50%,6px) scale(.6)}20%{opacity:1;transform:translate(-50%,0) scale(1.1)}80%{opacity:1}100%{opacity:0;transform:translate(-50%,-10px)}}
 @keyframes rflow{to{stroke-dashoffset:-84}}
+@keyframes floatF{0%,100%{transform:translateY(0)}50%{transform:translateY(-5px)}}
 @keyframes kspin{to{transform:rotate(360deg)}}
 @keyframes ksway{0%,100%{transform:rotate(-2.5deg)}50%{transform:rotate(2.5deg)}}
 @keyframes ksmoke{0%{transform:translate(0,0) scale(.6);opacity:.95}100%{transform:translate(6px,-22px) scale(1.4);opacity:0}}
@@ -512,6 +521,7 @@ h2{margin:0;font-size:20px;font-weight:600}
     <span class="ffly" style="left:52%;bottom:92px;animation-delay:-2s" aria-hidden="true"></span>
     <span class="ffly" style="left:80%;bottom:70px;animation-delay:-4s" aria-hidden="true"></span>
     <div class="hill" aria-hidden="true"></div>
+    <div class="tstars" id="tstars" aria-hidden="true"></div>
     <div class="bg-trees" id="bgTrees" aria-hidden="true"></div>
     <svg class="river" viewBox="0 0 400 46" preserveAspectRatio="none" aria-hidden="true">
       <path class="r-water" d="M0 12C50 2 110 24 200 14S330 2 400 12V36C330 46 250 26 200 36S60 48 0 34Z" stroke="#4A1F12" stroke-width="3" vector-effect="non-scaling-stroke" stroke-linejoin="round"></path>
@@ -864,7 +874,7 @@ var CLOCK_S='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true">
 var BELL='<svg width="18" height="18" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 16V11a6 6 0 0112 0v5l1.5 2h-15zM10 20a2 2 0 004 0" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linejoin="round"></path></svg>';
 var CHECK_S='<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 11.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 var DOTS='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"></circle><circle cx="12" cy="12" r="2.2" fill="currentColor"></circle><circle cx="19" cy="12" r="2.2" fill="currentColor"></circle></svg>';
-var CRANE='<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3M3 21h6M5 4h16M5 8l4-4M17 4v6M15 10h4v4h-4z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>';
+var CRANE='<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><rect x="5" y="15" width="14" height="6" rx="1.5" fill="none" stroke="#fff" stroke-width="2"></rect><rect x="5" y="3" width="14" height="5" rx="1.5" fill="none" stroke="#fff" stroke-width="2" stroke-dasharray="3 2"></rect><path d="M12 9.5v3.5M9.5 11l2.5 2.5 2.5-2.5" fill="none" stroke="#fff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 var HOUSE='<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M3 21h18M5 21V10l5-4 5 4v11M15 21V13h4v8M9 21v-4h2v4" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"></path></svg>';
 var FLOWER='<svg width="30" height="30" viewBox="0 0 24 24" aria-hidden="true"><path d="M12 21v-8M12 13c0-4 3-7 7-7 0 4-3 7-7 7zM12 15c0-3-2.5-5.5-6-5.5 0 3 2.5 5.5 6 5.5z" fill="none" stroke="#fff" stroke-width="2.2" stroke-linejoin="round"></path></svg>';
 var SOUND_ON='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><path d="M4 9h4l5-4v14l-5-4H4z" fill="currentColor"></path><path d="M16 8.5a5 5 0 010 7M18.5 6a8.5 8.5 0 010 12" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"></path></svg>';
@@ -1177,9 +1187,8 @@ function itemHTML(it,i){
     var top=L.peak?'<svg class="'+(drop?'drop':'')+'" width="68" height="22" viewBox="0 0 68 22" aria-hidden="true" style="display:block;margin-bottom:-2px"><path d="M3 20.5L34 2L65 20.5Z" fill="'+L.roof+'" stroke="#4A1F12" stroke-width="3" stroke-linejoin="round"></path><path d="M20 13h28M28 8h12" stroke="#4A1F12" stroke-opacity=".28" stroke-width="1.6" stroke-linecap="round"></path></svg>':'<span class="pole'+(drop?' drop':'')+'"><i></i></span>';
     return '<button class="ti tower'+sel+'" '+head+'>'+top+'<span class="floors">'+f+'</span></button>';
   }
-  for(k=it.total-1;k>=0;k--)f+=(k<it.built)?floorHTML(L.color,i,k,drop&&k===it.built-1):'<span class="floor ghost"></span>';
-  var ch=it.total*22+34;
-  return '<button class="ti site'+sel+'" '+head+'><span class="crane" style="height:'+ch+'px"><span class="mast"></span><span class="jib"></span><span class="cable"><i style="background:'+L.color+'"></i></span></span><span class="floors">'+f+'</span></button>';
+  for(k=it.total-1;k>=0;k--)f+=(k<it.built)?floorHTML(L.color,i,k,drop&&k===it.built-1):'<span class="floor float" style="background:'+L.color+';animation-delay:-'+(k*.45).toFixed(2)+'s"><i class="win"></i><i class="win"></i><i class="win"></i></span>';
+  return '<button class="ti site'+sel+'" '+head+'><span class="floors">'+f+'</span></button>';
 }
 /* [fur, stripes, face lines] */
 var CATS=[['#FFA347','#E8801E','#4A1F12'],['#C3BFCF','#8E8A99','#3A2F3F'],['#4A3A3A','#2E2222','#FFE08A'],['#FFFFFF','#E3D2C6','#4A1F12'],['#E8C29A','#C4935F','#4A1F12']];
@@ -1974,7 +1983,7 @@ function treeSVG(kind,s,colKey){
   return h;
 }
 /* which tree goes where: small and far on the left (the sun lives there), big in the middle and right */
-var TREE_SPOTS=[[7,.46,'round','c'],[19,.6,'umbrella','a'],[33,.7,'oak','b'],[47,.56,'tier','a'],[61,.74,'round','c'],[75,.62,'oak','a'],[88,.7,'tier','b']];
+var TREE_SPOTS=[[5,.24,'round','c'],[14,.3,'umbrella','a'],[24,.35,'oak','b'],[34,.28,'tier','a'],[44,.33,'round','c'],[54,.37,'oak','a'],[64,.3,'umbrella','b'],[74,.35,'tier','b'],[84,.31,'round','a'],[94,.36,'oak','c']];
 function bgTrees(){
   var s=season(),h='';
   TREE_SPOTS.forEach(function(p,i){
@@ -2041,17 +2050,17 @@ function peep(n){
 }
 var familyOut=false;
 function spawnDucks(){
-  if(canRun()&&tm()!=='night'&&!familyOut){
+  if(!canRun()||familyOut){later(spawnDucks,3,3);return}
+  {
     familyOut=true;
     var kids=2+Math.floor(Math.random()*3),inner='';
     for(var k=0;k<kids;k++)inner+='<span class="duckling" style="animation-delay:-'+(k*.35).toFixed(2)+'s">'+ducklingSVG()+'</span>';
     inner+='<span class="mom">'+duckSVG()+'</span>';
-    var W=sceneW(),el=ambAdd('<div class="duck-family">'+inner+'</div>',false,'duck-amb'),y=riverMidY()-21,fw=34+kids*23,dur=(36+Math.random()*14)*1000;
+    var W=sceneW(),el=ambAdd('<div class="duck-family">'+inner+'</div>',false,'duck-amb'),y=riverMidY()-21,fw=34+kids*23,dur=(24+Math.random()*6)*1000,loud=tm()!=='night';
     var a=el.animate([{transform:'translate('+(-fw-10)+'px,'+y+'px)'},{transform:'translate('+(W+10)+'px,'+(y+1)+'px)'}],{duration:dur,easing:'linear'});
-    if(!document.hidden&&!reduce){setTimeout(function(){if(familyOut)quack(2)},dur*.22);setTimeout(function(){if(familyOut)peep(3)},dur*.3);setTimeout(function(){if(familyOut&&Math.random()<.6)quack(1)},dur*.62)}
-    a.onfinish=function(){el.remove();familyOut=false};
+    if(loud&&!document.hidden&&!reduce){setTimeout(function(){if(familyOut)quack(2)},dur*.22);setTimeout(function(){if(familyOut)peep(3)},dur*.3);setTimeout(function(){if(familyOut&&Math.random()<.6)quack(1)},dur*.62)}
+    a.onfinish=function(){el.remove();familyOut=false;setTimeout(spawnDucks,20000)};
   }
-  later(spawnDucks,14,34);
 }
 
 /* birds glide across the sky now and then; at dusk they fly home in a V */
@@ -2113,8 +2122,13 @@ function wakeCats(only){
   cats.forEach(function(c,i){setTimeout(function(){c.classList.remove('awake');void c.offsetWidth;c.classList.add('awake');setTimeout(function(){c.classList.remove('awake')},2600)},Math.min(i,4)*120)});
 }
 
+function tinyStars(){
+  var h='';for(var i=0;i<46;i++){var sz=Math.random()<.75?1.4:2.2,o=(.35+Math.random()*.55).toFixed(2);
+    h+='<span class="tstar" style="left:'+(Math.random()*100).toFixed(1)+'%;top:'+(2+Math.random()*58).toFixed(1)+'%;width:'+sz+'px;height:'+sz+'px;--o:'+o+';--d:'+(2+Math.random()*4).toFixed(1)+'s;--dl:-'+(Math.random()*4).toFixed(1)+'s'+(sz>2?';box-shadow:0 0 3px 1px rgba(255,255,255,.5)':'')+'"></span>'}
+  $('tstars').innerHTML=h;
+}
 function startAmbient(){
-  bgTrees();
+  bgTrees();tinyStars();
   if(!AMB.on)return;
   later(spawnBirds,3,8);later(spawnDucks,2,6);later(spawnFish,5,12);later(dropFromTree,3,6);later(snowfall,1,2);later(spawnStar,4,10);
 }
