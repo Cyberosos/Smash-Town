@@ -1,5 +1,5 @@
 // Smash Town offline support: keeps the app working without internet.
-const CACHE = 'smash-town-v3';
+const CACHE = 'smash-town-v4';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
@@ -30,4 +30,13 @@ self.addEventListener('fetch', e => {
     caches.open(CACHE).then(c => c.put(e.request, copy));
     return res;
   })));
+});
+
+// Tapping a timer notification brings the app to the front (or opens it).
+self.addEventListener('notificationclick', e => {
+  e.notification.close();
+  e.waitUntil(self.clients.matchAll({ type: 'window', includeUncontrolled: true }).then(list => {
+    for (const c of list) { if ('focus' in c) return c.focus(); }
+    return self.clients.openWindow('./');
+  }));
 });

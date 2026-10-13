@@ -29,6 +29,7 @@
   --font:'Fredoka', ui-rounded, 'Nunito', system-ui, sans-serif;
   color-scheme: light;
 }
+[hidden]{display:none!important}
 html,body{height:100%}
 body{background:var(--bg);color:var(--ink);font-family:var(--font);font-size:16px;-webkit-tap-highlight-color:transparent}
 button{font-family:inherit;color:inherit}
@@ -288,6 +289,21 @@ h2{margin:0;font-size:20px;font-weight:600}
 .ring .prog{fill:none;stroke:var(--red);stroke-width:16;stroke-linecap:round;transition:stroke-dashoffset .3s linear}
 .t-num{position:absolute;inset:0;display:grid;place-items:center;font-size:44px;font-weight:700;font-variant-numeric:tabular-nums}
 .t-btns{display:flex;flex-direction:column;gap:8px;width:100%}
+.t-row2{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:8px}
+.t-presets{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;width:100%}
+.t-presets[hidden]{display:none}
+.chip{min-height:46px;border:0;border-radius:14px;background:var(--card);font-size:16px;font-weight:600;cursor:pointer;box-shadow:0 2px 0 var(--line);font-variant-numeric:tabular-nums}
+.chip[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 3px 0 var(--red-deep)}
+.cta.alt{background:var(--yellow);color:var(--ink);box-shadow:0 5px 0 #C78A00}
+.t-task{margin:0;font-size:14px;font-weight:600;color:var(--red-ink);max-width:28ch;overflow-wrap:anywhere}
+.ring.up .prog{stroke:var(--yellow)}
+.ring.up{animation:pop .6s cubic-bezier(.3,1.6,.5,1) 3}
+.clock{width:44px;height:44px;flex-shrink:0;border:0;background:none;border-radius:12px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
+.t-chip{flex-shrink:0;min-height:36px;border:0;border-radius:999px;padding:0 12px;background:var(--red);color:#fff;font-size:14px;font-weight:700;display:flex;align-items:center;gap:6px;cursor:pointer;font-variant-numeric:tabular-nums;box-shadow:0 2px 0 var(--red-deep)}
+.t-chip.paused{background:var(--chip);color:var(--ink);box-shadow:0 2px 0 var(--line)}
+.t-chip svg{animation:tickTock 1s steps(2) infinite}
+.t-chip.paused svg{animation:none}
+.step .dot.built{background:var(--c,var(--red))}
 .ghost{height:46px;border:0;background:none;color:var(--muted);font-size:15px;font-weight:600;cursor:pointer}
 
 @keyframes sway{0%,100%{transform:rotate(-5deg)}50%{transform:rotate(5deg)}}
@@ -319,6 +335,7 @@ h2{margin:0;font-size:20px;font-weight:600}
 @keyframes sheetUp{0%{transform:translateY(100%)}100%{transform:translateY(0)}}
 @keyframes cardIn{0%{transform:translateY(16px) scale(.97);opacity:0}100%{transform:none;opacity:1}}
 @keyframes fadeIn{from{opacity:0}to{opacity:1}}
+@keyframes tickTock{0%{transform:rotate(-10deg)}100%{transform:rotate(10deg)}}
 @keyframes twStar{0%,100%{opacity:.3}50%{opacity:1}}
 @keyframes firefly{0%,100%{opacity:0;transform:translate(0,0)}30%{opacity:1}50%{transform:translate(14px,-10px)}70%{opacity:.8}}
 @keyframes musicBob{0%,100%{transform:translateY(0) rotate(0)}50%{transform:translateY(-2px) rotate(-8deg)}}
@@ -410,7 +427,7 @@ h2{margin:0;font-size:20px;font-weight:600}
     </div>
     <label class="lbl" for="tTitle">What do you want to do?</label>
     <input class="field" id="tTitle" maxlength="80" autocomplete="off" placeholder="e.g. Reply to one client">
-    <div class="switch-row">
+    <div class="switch-row" id="swRow">
       <div>
         <div class="sw-title">Break it into tiny steps</div>
         <div class="sw-sub">Optional · each step builds a floor</div>
@@ -435,14 +452,14 @@ h2{margin:0;font-size:20px;font-weight:600}
   <div class="backdrop" data-act="close-timer"></div>
   <div class="timer-card" role="dialog" aria-labelledby="tHead">
     <h2 id="tHead">Just 5 minutes</h2>
+    <p class="t-task" id="tTask" hidden></p>
     <p id="tMsg">Start anything. When the ring runs out, you are allowed to stop.</p>
-    <div class="ring">
+    <div class="t-presets" id="tPresets" role="group" aria-label="How long" hidden></div>
+    <div class="ring" id="tRing">
       <svg viewBox="0 0 200 200" aria-hidden="true"><circle class="track" cx="100" cy="100" r="86"></circle><circle class="prog" id="tProg" cx="100" cy="100" r="86" stroke-dasharray="540.35" stroke-dashoffset="0"></circle></svg>
       <div class="t-num" id="tNum">5:00</div>
     </div>
-    <div class="t-btns">
-      <button class="cta" id="tGo" data-act="t-go">Start</button>
-      <button class="ghost" data-act="close-timer">Close</button>
+    <div class="t-btns" id="tBtns">
     </div>
   </div>
 </div>
@@ -701,10 +718,12 @@ var TASKC=['#E8263A','#FF8A1F','#13B5A6','#7B4BE0','#FF5FA2','#2F7DF6'];
 var CNAME={'#E8263A':'Red','#FF8A1F':'Orange','#FFC93C':'Sunny','#13B5A6':'Teal','#7B4BE0':'Purple','#FF5FA2':'Pink','#2F7DF6':'Blue'};
 var ROOF={'#E8263A':'#8E0B20','#FF8A1F':'#C24A00','#FFC93C':'#C78A00','#13B5A6':'#0B7A6E','#7B4BE0':'#4A2A99','#FF5FA2':'#B8306E','#2F7DF6':'#1A4FA8'};
 var CONF=['#E8263A','#FFC93C','#7B4BE0','#13B5A6','#FF8A1F','#FF5FA2','#2F7DF6','#FFFFFF'];
-var R={quick:10,step:5,build:25,timer:5};
+var R={quick:10,step:5,build:25,timer:5,focus:5};
 var LS='smashtown.v1';
-var MAX_STEPS=6;
+var MAX_STEPS=10;
 var CHECK='<svg width="22" height="22" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 11.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
+var CLOCK='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2.2"></circle><path d="M12 9v4l2.5 2M9 2h6" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"></path></svg>';
+var CLOCK_S='<svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="currentColor" stroke-width="2.6"></circle><path d="M12 9v4l2.5 2" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"></path></svg>';
 var CHECK_S='<svg width="18" height="18" viewBox="0 0 22 22" aria-hidden="true"><path d="M5 11.5l4 4 8-9" fill="none" stroke="#fff" stroke-width="3.2" stroke-linecap="round" stroke-linejoin="round"></path></svg>';
 var DOTS='<svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="5" cy="12" r="2.2" fill="currentColor"></circle><circle cx="12" cy="12" r="2.2" fill="currentColor"></circle><circle cx="19" cy="12" r="2.2" fill="currentColor"></circle></svg>';
 var CRANE='<svg width="28" height="28" viewBox="0 0 24 24" aria-hidden="true"><path d="M5 21V3M3 21h6M5 4h16M5 8l4-4M17 4v6M15 10h4v4h-4z" fill="none" stroke="#fff" stroke-width="2" stroke-linejoin="round" stroke-linecap="round"></path></svg>';
@@ -910,7 +929,7 @@ function quickHTML(t){
   var sub=t.done?'Smashed! '+esc(t.look.name)+' joined your town':'+'+R.quick+' coins · a surprise for your town';
   return '<div class="task'+(t.done?' done':'')+'" style="--c:'+t.color+'">'+
     '<button class="smash'+pop+'" data-act="toggle" data-id="'+t.id+'" aria-pressed="'+(t.done?'true':'false')+'" aria-label="'+(t.done?'Undo: ':'Smash: ')+esc(t.title)+'">'+CHECK+'</button>'+
-    '<div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+
+    '<div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+timerBtn(t)+
     '<button class="more" data-act="menu" data-id="'+t.id+'" aria-expanded="'+(ui.menu===t.id)+'" aria-label="Options for '+esc(t.title)+'">'+DOTS+'</button>'+menuHTML(t)+'</div>';
 }
 function bigHTML(t){
@@ -923,9 +942,17 @@ function bigHTML(t){
   }).join('');
   var sub=t.done?'Built! '+esc(t.look.name)+' stands in your town':b+' of '+n+' floors · '+esc(t.look.name);
   return '<div class="task big'+(t.done?' done':'')+'" style="--c:'+t.look.color+'">'+
-    '<div class="big-head"><span class="big-icon">'+(t.done?HOUSE:CRANE)+'</span><div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+
+    '<div class="big-head"><span class="big-icon">'+(t.done?HOUSE:CRANE)+'</span><div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+timerBtn(t)+
     '<button class="more" data-act="menu" data-id="'+t.id+'" aria-expanded="'+(ui.menu===t.id)+'" aria-label="Options for '+esc(t.title)+'">'+DOTS+'</button></div>'+
     '<div class="floorbar" aria-hidden="true">'+bar+'</div><div class="steps">'+steps+'</div>'+menuHTML(t)+'</div>';
+}
+function timerBtn(t){
+  if(t.done)return '';
+  if(S.timer&&S.timer.taskId===t.id){
+    var run=S.timer.running;
+    return '<button class="t-chip'+(run?'':' paused')+'" data-act="t-open" data-id="'+t.id+'" aria-label="Timer for '+esc(t.title)+'">'+CLOCK_S+'<span class="tc" data-id="'+t.id+'">'+fmtT(timerLeft())+'</span></button>';
+  }
+  return '<button class="clock" data-act="ttimer" data-id="'+t.id+'" aria-label="Start a timer for '+esc(t.title)+'">'+CLOCK+'</button>';
 }
 function menuHTML(t){
   if(ui.menu!==t.id)return '';
@@ -933,7 +960,7 @@ function menuHTML(t){
   if(ui.confirmDel===t.id)return tower
     ?'<div class="menu"><span>Cancel this tower? The whole building and all its floors will be removed.</span><button class="btn-sm" data-act="del-no">Keep building</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Remove tower</button></div>'
     :'<div class="menu"><span>Delete it and its spot in town?</span><button class="btn-sm" data-act="del-no">Keep</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Delete</button></div>';
-  return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button><button class="btn-sm danger" data-act="del" data-id="'+t.id+'">'+(tower?'Cancel tower':'Delete task')+'</button></div>';
+  return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button><button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button><button class="btn-sm danger" data-act="del" data-id="'+t.id+'">'+(tower?'Cancel tower':'Delete task')+'</button></div>';
 }
 function renderToday(){
   var td=dayKey();
@@ -1060,7 +1087,7 @@ var act={
   menu:function(b,id){sfx.tap();ui.menu=ui.menu===id?null:id;ui.confirmDel=null;render()},
   del:function(b,id){ui.confirmDel=id;render()},
   'del-no':function(){ui.confirmDel=null;ui.menu=null;render()},
-  'del-yes':function(b,id){S.tasks=S.tasks.filter(function(t){return t.id!==id});ui.menu=null;ui.confirmDel=null;if(ui.sel===id)ui.sel=null;sfx.undo();commit()},
+  'del-yes':function(b,id){if(S.timer&&S.timer.taskId===id){S.timer=null;T=null;clearNote();$('timer').hidden=true}S.tasks=S.tasks.filter(function(t){return t.id!==id});ui.menu=null;ui.confirmDel=null;if(ui.sel===id)ui.sel=null;sfx.undo();commit()},
   'clear-ex':function(){S.tasks=S.tasks.filter(function(t){return !t.ex});S.bonus=0;ui.sel=null;commit();toast('Examples cleared. Your town starts now.')},
   pick:function(b,id){var k=b.classList.contains('plant')?'plant':(b.classList.contains('house')?'house':'tower');selectSound(k);ui.sel=id;if(ui.view!=='town'){ui.view='town';ui.month=monthKey();window.scrollTo(0,0)}render();setTimeout(function(){scrollToItem(id)},40)},
   'go-town':function(){sfx.tap();ui.view='town';ui.month=monthKey();render();window.scrollTo(0,0);scrollTownEnd()},
@@ -1091,8 +1118,17 @@ var act={
   },
   'open-sheet':openSheet,'close-sheet':closeSheet,
   'switch':function(){setSwitch($('bdSwitch').getAttribute('aria-checked')!=='true');sfx.tap()},
-  'add-step':function(){readSteps();if(sheetSteps.length<MAX_STEPS){sheetSteps.push('');renderSteps(sheetSteps.length-1)}},
-  'rm-step':function(b){readSteps();sheetSteps.splice(+b.dataset.i,1);if(sheetSteps.length<1)sheetSteps.push('');renderSteps()},
+  'add-step':function(){readSteps();if(sheetSteps.length<MAX_STEPS){sheetSteps.push({id:null,text:'',done:false,doneAt:null});renderSteps(sheetSteps.length-1)}},
+  'rm-step':function(b){readSteps();sheetSteps.splice(+b.dataset.i,1);if(sheetSteps.length<1)sheetSteps.push({id:null,text:'',done:false,doneAt:null});renderSteps()},
+  edit:function(b,id){openSheet(id)},
+  ttimer:function(b,id){openTaskTimer(id)},
+  't-open':function(b,id){openTaskTimer(id)},
+  't-preset':function(b){if(!T||T.started)return;var m=+b.dataset.m;T.total=T.left=m*60;S.lastMins=m;persist();sfx.tap();renderTimer()},
+  't-pause':function(){if(!T||!T.running)return;T.left=timerLeft();T.running=false;saveTimer();sfx.tap();renderTimer();render();noteTimer()},
+  't-resume':function(){if(!T)return;T.end=Date.now()+T.left*1000;T.running=true;saveTimer();sfx.ding();renderTimer();render();noteTimer()},
+  't-stop':function(){T=null;S.timer=null;persist();clearNote();$('timer').hidden=true;sfx.undo();render()},
+  't-more':function(){if(!T)return;T.total=T.left=300;T.done=false;T.end=Date.now()+300000;T.running=true;T.started=true;$('tRing').classList.remove('up');saveTimer();sfx.ding();renderTimer();render();noteTimer()},
+  't-smash':function(){smashFromTimer()},
   five:openTimer,'close-timer':closeTimer,'t-go':timerGo
 };
 document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
@@ -1153,35 +1189,48 @@ document.addEventListener('pointerdown',armMusic,true);
 
 
 /* ---------- add sheet ---------- */
-var sheetSteps=['','',''];
+var sheetSteps=[];var editId=null;
+function blankSteps(){return [0,1,2].map(function(){return{id:null,text:'',done:false,doneAt:null}})}
 function setSwitch(on){
   $('bdSwitch').setAttribute('aria-checked',on?'true':'false');
   $('stepsBox').hidden=!on;$('quickHint').hidden=on;
-  $('addCta').textContent=on?'Start building':'Add to my town';
+  $('addCta').textContent=editId?'Save changes':(on?'Start building':'Add to my town');
   $('formErr').textContent='';
   if(on)renderSteps();
 }
-function readSteps(){var ins=$('stepsList').querySelectorAll('input');sheetSteps=Array.prototype.map.call(ins,function(i){return i.value})}
+function readSteps(){var ins=$('stepsList').querySelectorAll('input');Array.prototype.forEach.call(ins,function(inp,i){if(sheetSteps[i])sheetSteps[i].text=inp.value})}
 function renderSteps(focusIdx){
   var cs=['#E8263A','#FF8A1F','#7B4BE0','#13B5A6','#FF5FA2','#2F7DF6'];
-  $('stepsList').innerHTML=sheetSteps.map(function(v,i){return '<div class="step-in"><span class="dot" style="background:'+cs[i%cs.length]+'">F'+(i+1)+'</span><input id="st-'+i+'" maxlength="60" autocomplete="off" aria-label="Tiny step '+(i+1)+'" placeholder="Tiny step '+(i+1)+'" value="'+esc(v)+'">'+(sheetSteps.length>1?'<button type="button" class="rm" data-act="rm-step" data-i="'+i+'" aria-label="Remove step '+(i+1)+'"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"></path></svg></button>':'')+'</div>'}).join('');
+  $('stepsList').innerHTML=sheetSteps.map(function(v,i){return '<div class="step-in"><span class="dot" style="background:'+cs[i%cs.length]+'"'+(v.done?' title="Built"':'')+'>'+(v.done?CHECK_S:'F'+(i+1))+'</span><input id="st-'+i+'" maxlength="60" autocomplete="off" aria-label="'+(v.done?'Built floor ':'Tiny step ')+(i+1)+'" placeholder="Tiny step '+(i+1)+'" value="'+esc(v.text)+'">'+(sheetSteps.length>1?'<button type="button" class="rm" data-act="rm-step" data-i="'+i+'" aria-label="Remove step '+(i+1)+'"><svg width="16" height="16" viewBox="0 0 24 24" aria-hidden="true"><path d="M6 6l12 12M18 6L6 18" stroke="currentColor" stroke-width="2.6" stroke-linecap="round"></path></svg></button>':'')+'</div>'}).join('');
   $('addStepBtn').hidden=sheetSteps.length>=MAX_STEPS;
-  $('floorsHint').innerHTML=CRANE+'<span>Becomes a '+sheetSteps.length+'-floor building, one floor per step</span>';
+  var built=sheetSteps.filter(function(x){return x.done}).length;
+  $('floorsHint').innerHTML=CRANE+'<span>'+(editId?sheetSteps.length+' floors · '+built+' built. Removing a built floor also removes its coins.':'Becomes a '+sheetSteps.length+'-floor building, one floor per step')+'</span>';
   if(focusIdx!=null){var el=$('st-'+focusIdx);if(el)el.focus()}
 }
-function openSheet(){
-  ui.menu=null;sheetSteps=['','',''];$('tTitle').value='';setSwitch(false);$('formErr').textContent='';
-  $('sheet').hidden=false;setTimeout(function(){$('tTitle').focus()},60);sfx.tap();
+function openSheet(id){
+  editId=(typeof id==='string'&&find(id))?id:null;ui.menu=null;ui.confirmDel=null;$('formErr').textContent='';
+  if(editId){
+    var t=find(editId),big=t.kind==='big';
+    $('sheetTitle').textContent=big?'Edit tower':'Rename task';
+    $('tTitle').value=t.title;$('swRow').hidden=true;
+    sheetSteps=big?t.steps.map(function(s){return{id:s.id,text:s.text,done:s.done,doneAt:s.doneAt||null}}):blankSteps();
+    setSwitch(big);$('addCta').textContent='Save changes';
+  } else {
+    $('sheetTitle').textContent='New task';$('swRow').hidden=false;
+    sheetSteps=blankSteps();$('tTitle').value='';setSwitch(false);
+  }
+  render();$('sheet').hidden=false;setTimeout(function(){if(!editId)$('tTitle').focus()},60);sfx.tap();
 }
 function closeSheet(){$('sheet').hidden=true}
 $('addForm').addEventListener('submit',function(e){
   e.preventDefault();
   var title=$('tTitle').value.trim();
   if(!title){$('formErr').textContent='Give your task a name first.';$('tTitle').focus();return}
+  if(editId){saveEdit(title);return}
   var on=$('bdSwitch').getAttribute('aria-checked')==='true';
   var now=Date.now(),t;
   if(on){
-    readSteps();var st=sheetSteps.map(function(s){return s.trim()}).filter(Boolean);
+    readSteps();var st=sheetSteps.map(function(s){return s.text.trim()}).filter(Boolean);
     if(st.length<2){$('formErr').textContent='Add at least 2 steps, or turn the switch off for a quick task.';return}
     t={id:uid(),kind:'big',title:title,createdAt:now,done:false,doneAt:null,doneDay:null,look:bigLook(),steps:st.map(function(x){return{id:uid(),text:x,done:false,doneAt:null}})};
     ui.justAdded=t.id;
@@ -1192,35 +1241,190 @@ $('addForm').addEventListener('submit',function(e){
   if(on){toast('Construction started: <b>'+esc(t.look.name)+'</b>');scrollTownEnd()}
 });
 
-/* ---------- 5 minute timer ---------- */
-var TOTAL=300,tEnd=0,tLeft=TOTAL,tInt=null,tDone=false;
-var CIRC=2*Math.PI*86;
-function tDraw(){var m=Math.floor(tLeft/60),s=Math.ceil(tLeft%60);if(s===60){m++;s=0}$('tNum').textContent=m+':'+String(s).padStart(2,'0');$('tProg').style.strokeDashoffset=String(CIRC*(1-tLeft/TOTAL))}
-function openTimer(){
-  tLeft=TOTAL;tDone=false;clearInterval(tInt);tInt=null;tEnd=0;
-  $('tGo').textContent='Start';$('tMsg').textContent='Start anything. When the ring runs out, you are allowed to stop.';
-  $('timer').hidden=false;tDraw();sfx.tap();
-}
-function closeTimer(){clearInterval(tInt);tInt=null;$('timer').hidden=true}
-function tick(){tLeft=Math.max(0,(tEnd-Date.now())/1000);tDraw();if(tLeft<=0)finishTimer()}
-function timerGo(){
-  if(tDone){closeTimer();return}
-  if(tInt){
-    clearInterval(tInt);tInt=null;finishTimer(true);return;
+function saveEdit(title){
+  var t=find(editId);if(!t){closeSheet();return}
+  t.title=title;
+  if(t.kind==='big'){
+    readSteps();
+    var st=sheetSteps.filter(function(s){return s.text.trim()});
+    if(st.length<2){$('formErr').textContent='A tower needs at least 2 floors.';return}
+    var before=t.steps.length;
+    t.steps=st.map(function(s){return{id:s.id||uid(),text:s.text.trim(),done:!!s.done,doneAt:s.done?(s.doneAt||Date.now()):null}});
+    var all=t.steps.every(function(s){return s.done}),was=t.done;
+    if(S.timer&&S.timer.taskId===t.id&&S.timer.stepId&&!t.steps.some(function(s){return s.id===S.timer.stepId&&!s.done})){var nx=nextStep(t);S.timer.stepId=nx?nx.id:null;if(T)T.stepId=S.timer.stepId}
+    closeSheet();
+    if(all&&!was){
+      t.done=true;t.doneAt=Date.now();t.doneDay=dayKey();ui.justStepTask=t.id;ui.coinBump=true;
+      if(S.timer&&S.timer.taskId===t.id){S.timer=null;T=null}
+      sfx.build();burst($('scene'),t.look.color,{big:true,coins:'+'+R.build,text:'BUILT!'});
+      toast('Built! <b>'+esc(t.look.name)+'</b> · +'+R.build+' bonus');
+    } else {
+      if(!all&&was){t.done=false;t.doneAt=null;t.doneDay=null}
+      var diff=t.steps.length-before;
+      sfx.ding();ui.justStepTask=t.id;
+      toast((diff>0?'+'+diff+(diff===1?' floor':' floors')+' added. ':(diff<0?(-diff)+(diff===-1?' floor':' floors')+' removed. ':''))+'<b>'+esc(t.look.name)+'</b> now has '+t.steps.length+' floors');
+    }
+  } else {
+    closeSheet();sfx.ding();toast('Renamed to <b>'+esc(title)+'</b>');
   }
-  tEnd=Date.now()+tLeft*1000;tInt=setInterval(tick,250);tick();
-  $('tGo').textContent='I already started!';$('tMsg').textContent='Go go go. Tap the button the moment you are into it.';sfx.ding();
+  editId=null;commit();
 }
-function finishTimer(){
-  clearInterval(tInt);tInt=null;if(tDone)return;tDone=true;
+
+/* ---------- timer notifications (installed app only; skipped where the browser refuses) ---------- */
+var NTAG='smash-timer',lastNoteMin=-1,upT=null;
+function canNotify(){try{return 'Notification' in window&&'serviceWorker' in navigator&&!!navigator.serviceWorker.controller}catch(e){return false}}
+function askNotify(){
+  try{if(canNotify()&&Notification.permission==='default')Notification.requestPermission().then(function(){noteTimer()}).catch(function(){})}catch(e){}
+}
+function endClock(ms){return new Date(ms).toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
+function showNote(title,opts){
+  try{
+    if(!canNotify()||Notification.permission!=='granted')return;
+    navigator.serviceWorker.ready.then(function(reg){
+      return reg.showNotification(title,Object.assign({tag:NTAG,icon:'icon-192.png',badge:'icon-192.png',data:{url:'./'}},opts));
+    }).catch(function(){});
+  }catch(e){}
+}
+function clearNote(){
+  lastNoteMin=-1;clearTimeout(upT);
+  try{if(canNotify())navigator.serviceWorker.ready.then(function(reg){return reg.getNotifications({tag:NTAG})}).then(function(ns){(ns||[]).forEach(function(n){n.close()})}).catch(function(){})}catch(e){}
+}
+/* shows or refreshes the running-timer notification: minutes left and the time it ends */
+function noteTimer(){
+  if(!T||T.kind!=='task'||T.done||!T.started){return}
+  var t=find(T.taskId);if(!t)return;
+  var left=timerLeft(),mins=Math.max(1,Math.ceil(left/60));lastNoteMin=mins;
+  if(T.running){
+    showNote('\u23F1 '+mins+' min left · '+t.title,{body:'Focus timer ends at '+endClock(T.end)+'. Tap to open Smash Town.',silent:true,renotify:false,requireInteraction:true,timestamp:T.end});
+    clearTimeout(upT);upT=setTimeout(function(){if(T&&T.running&&!T.done&&Date.now()>=T.end)timeUp()},Math.max(0,T.end-Date.now())+200);
+  } else {
+    showNote('\u23F8 Paused · '+mins+' min left',{body:t.title+'. Tap to open Smash Town and resume.',silent:true,renotify:false,requireInteraction:true});
+    clearTimeout(upT);
+  }
+}
+
+/* ---------- task timers ---------- */
+var T=null;
+var PRESETS=[5,10,15,25,45,60];
+function nextStep(t){for(var i=0;i<t.steps.length;i++)if(!t.steps[i].done)return t.steps[i];return null}
+function timerLeft(){
+  if(T&&(T.kind==='task'||T.kind==='five'))return T.running?Math.max(0,(T.end-Date.now())/1000):T.left;
+  if(S.timer)return S.timer.running?Math.max(0,(S.timer.end-Date.now())/1000):S.timer.left;
+  return 0;
+}
+function fmtT(sec){var s=Math.ceil(sec),h=Math.floor(s/3600),m=Math.floor(s%3600/60),r=s%60;return (h?h+':'+String(m).padStart(2,'0'):m)+':'+String(r).padStart(2,'0')}
+function saveTimer(){S.timer=(T&&T.kind==='task'&&!T.done)?{taskId:T.taskId,stepId:T.stepId||null,total:T.total,end:T.end||0,left:T.left,running:!!T.running}:null;persist()}
+function openTaskTimer(id){
+  var t=find(id);if(!t||t.done)return;
+  if(S.timer&&S.timer.taskId!==id){var o=find(S.timer.taskId);toast('Your timer for <b>'+esc(o?o.title:'another task')+'</b> is still going. Stop it first to start a new one.');id=S.timer.taskId;t=o;if(!t){S.timer=null;persist();return}}
+  if(!T||T.taskId!==id){
+    if(S.timer&&S.timer.taskId===id)T={kind:'task',taskId:id,stepId:S.timer.stepId,total:S.timer.total,end:S.timer.end,left:S.timer.left,running:S.timer.running,started:true,done:false};
+    else{var mins=S.lastMins||25,ns=t.kind==='big'?nextStep(t):null;T={kind:'task',taskId:id,stepId:ns?ns.id:null,total:mins*60,left:mins*60,end:0,running:false,started:false,done:false}}
+  }
+  $('tRing').classList.remove('up');renderTimer();$('timer').hidden=false;sfx.tap();
+}
+function timerTaskLabel(){
+  var t=T&&T.taskId?find(T.taskId):null;if(!t)return '';
+  if(t.kind==='big'&&T.stepId){for(var i=0;i<t.steps.length;i++)if(t.steps[i].id===T.stepId)return esc(t.title)+' · Floor '+(i+1)+': '+esc(t.steps[i].text)}
+  return esc(t.title);
+}
+function renderTimer(){
+  if(!T)return;var btns='',P=$('tPresets');
+  if(T.kind==='five'){
+    $('tTask').hidden=true;P.hidden=true;$('tHead').textContent='Just 5 minutes';
+    if(T.done){$('tMsg').textContent='Starting is the hardest part, and you did it. Keep going or take a break.';btns='<button class="cta" data-act="close-timer">Done</button>'}
+    else if(T.running){$('tMsg').textContent='Go go go. Tap the button the moment you are into it.';btns='<button class="cta" data-act="t-go">I already started!</button><button class="ghost" data-act="close-timer">Close</button>'}
+    else{$('tMsg').textContent='Start anything. When the ring runs out, you are allowed to stop.';btns='<button class="cta" data-act="t-go">Start</button><button class="ghost" data-act="close-timer">Close</button>'}
+  } else {
+    $('tTask').hidden=false;$('tTask').innerHTML=timerTaskLabel();
+    if(T.done){
+      $('tHead').textContent='Time\'s up!';$('tMsg').textContent='You stayed with it. +'+R.focus+' focus coins. Did you finish?';P.hidden=true;
+      btns='<button class="cta" data-act="t-smash">Yes, smash it!</button><button class="cta alt" data-act="t-more">5 more minutes</button><button class="ghost" data-act="t-stop">Not yet, close</button>';
+    } else if(!T.started){
+      $('tHead').textContent='Focus timer';$('tMsg').textContent='How long do you want to focus?';P.hidden=false;
+      var cur=Math.round(T.total/60);
+      P.innerHTML=PRESETS.map(function(m){return '<button class="chip" data-act="t-preset" data-m="'+m+'" aria-pressed="'+(m===cur)+'">'+m+' min</button>'}).join('');
+      btns='<button class="cta" data-act="t-go">Start timer</button><button class="ghost" data-act="close-timer">Close</button>';
+    } else {
+      $('tHead').textContent=T.running?'Focusing':'Paused';P.hidden=true;
+      $('tMsg').textContent=T.running?'You can close this. The timer keeps going on your task.':'Take a breath. Resume when you are ready.';
+      btns=(T.running?'<button class="cta alt" data-act="t-pause">Pause</button>':'<button class="cta" data-act="t-resume">Resume</button>')+
+        '<button class="cta" data-act="t-smash">Finished early? Smash it</button>'+
+        '<div class="t-row2"><button class="ghost" data-act="t-stop">Stop timer</button><button class="ghost" data-act="close-timer">Close</button></div>';
+    }
+  }
+  $('tBtns').innerHTML=btns;tDraw();
+}
+function smashFromTimer(){
+  if(!T)return;var t=find(T.taskId),el=$('tNum');
+  var ring=T;T=null;S.timer=null;clearNote();
+  if(t&&!t.done){
+    if(t.kind==='quick')act.toggle(el,t.id);
+    else{var st=null;t.steps.forEach(function(x){if(x.id===ring.stepId&&!x.done)st=x});st=st||nextStep(t);if(st){el.dataset.sid=st.id;act.step(el,t.id);delete el.dataset.sid}}
+  } else persist();
+  setTimeout(function(){$('timer').hidden=true;render()},900);
+}
+function timeUp(){
+  if(!T||T.done)return;T.done=true;T.running=false;T.left=0;clearTimeout(upT);
+  var tt=find(T.taskId);
+  showNote('\u23F0 Time\'s up!',{body:'You stayed with '+(tt?tt.title:'your task')+'. +'+R.focus+' focus coins. Tap to smash it.',renotify:true,requireInteraction:true,vibrate:[200,100,200,100,400]});
+  S.bonus=(S.bonus||0)+R.focus;S.timer=null;ui.coinBump=true;persist();
+  $('timer').hidden=false;$('tRing').classList.add('up');renderTimer();
+  vib([200,100,200,100,400]);
+  var c=ctx();if(c){var n=c.currentTime;[0,.9,1.8].forEach(function(o){[784,988,1175].forEach(function(f,i){tone(c,'triangle',f,0,n+o+i*.12,.6,.2)})})}
+  burst($('tNum'),'#FFC93C',{coins:'+'+R.focus});
+  render();
+}
+/* restore a timer that was running when the app was closed */
+if(S.timer&&find(S.timer.taskId)){
+  T={kind:'task',taskId:S.timer.taskId,stepId:S.timer.stepId,total:S.timer.total,end:S.timer.end,left:S.timer.left,running:S.timer.running,started:true,done:false};
+} else if(S.timer){S.timer=null}
+setInterval(function(){
+  if(T&&T.kind==='task'&&!T.done){
+    var t=find(T.taskId);
+    if(!t||t.done){T=null;S.timer=null;persist();clearNote();if(!$('timer').hidden)$('timer').hidden=true;render();return}
+    if(T.running&&Date.now()>=T.end){timeUp();return}
+    if(T.running&&T.started){var mm=Math.max(1,Math.ceil(timerLeft()/60));if(mm!==lastNoteMin)noteTimer()}
+    var l=fmtT(timerLeft());
+    Array.prototype.forEach.call(document.querySelectorAll('.tc'),function(e){e.textContent=l});
+    if(!$('timer').hidden)tDraw();
+  }
+},500);
+
+/* ---------- 5 minute timer ---------- */
+var CIRC=2*Math.PI*86,fInt=null;
+function tDraw(){if(!T)return;var l=timerLeft();$('tNum').textContent=fmtT(l);$('tProg').style.strokeDashoffset=String(CIRC*(1-(T.total?l/T.total:0)))}
+function openTimer(){
+  if(T&&T.kind==='task'&&!T.done){openTaskTimer(T.taskId);return}
+  clearInterval(fInt);T={kind:'five',total:300,left:300,end:0,running:false,started:false,done:false};
+  $('tRing').classList.remove('up');renderTimer();$('timer').hidden=false;sfx.tap();
+}
+function closeTimer(){
+  $('timer').hidden=true;
+  if(T&&T.kind==='five'){clearInterval(fInt);T=null}
+  else if(T&&T.kind==='task'&&(T.done||!T.started))T=null;
+  render();
+}
+function timerGo(){
+  if(!T)return;
+  if(T.kind==='task'){T.started=true;T.running=true;T.end=Date.now()+T.left*1000;saveTimer();sfx.ding();renderTimer();render();askNotify();noteTimer();return}
+  if(T.done){closeTimer();return}
+  if(T.running){finishFive();return}
+  T.running=true;T.started=true;T.end=Date.now()+T.left*1000;
+  clearInterval(fInt);fInt=setInterval(function(){if(!T||T.kind!=='five'){clearInterval(fInt);return}tDraw();if(timerLeft()<=0)finishFive()},250);
+  sfx.ding();renderTimer();
+}
+function finishFive(){
+  clearInterval(fInt);if(!T||T.kind!=='five'||T.done)return;T.done=true;T.running=false;T.left=timerLeft();
   S.bonus=(S.bonus||0)+R.timer;ui.coinBump=true;
   sfx.build();burst($('tNum'),'#E8263A',{big:true,coins:'+'+R.timer,text:'STARTED!'});
-  $('tGo').textContent='Done';$('tMsg').textContent='Starting is the hardest part, and you did it. Keep going or take a break.';
-  commit();
+  renderTimer();commit();
 }
 
 render();
 checkMonth(townItems());
+if(T&&T.kind==='task'&&T.running&&Date.now()>=T.end)timeUp();
+else if(T&&T.kind==='task')setTimeout(noteTimer,1500);
 })();
 </script>
 <script>
