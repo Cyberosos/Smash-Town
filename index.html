@@ -86,6 +86,7 @@ h1{margin:0;font-size:32px;font-weight:700;line-height:1.05;text-wrap:balance}
 .m-layer .switch{width:56px;height:34px}
 .m-layer .switch .knob{width:26px;height:26px}
 .m-layer .switch[aria-checked="true"] .knob{transform:translateX(22px)}
+.m-sub{display:block;font-size:12.5px;color:var(--muted);margin-top:2px}
 .m-note{margin:0;color:var(--muted);font-size:14px;text-align:center}
 #musicBtn[aria-pressed="true"]{background:var(--red);color:#fff;box-shadow:0 2px 0 var(--red-deep)}
 #musicBtn[aria-pressed="true"] svg{animation:musicBob 1.6s ease-in-out infinite}
@@ -360,7 +361,8 @@ h2{margin:0;font-size:20px;font-weight:600}
 .scene.tall .duck-lane{bottom:70px;height:40px}
 .duck-lane .amb-it{top:auto;bottom:calc(50% - 5px)}
 .duck-lane .splash{bottom:calc(50% - 4px)}
-.duck-family{display:flex;align-items:flex-end;gap:4px}
+.duck-family{display:flex;align-items:flex-end;gap:4px;position:relative;pointer-events:auto;cursor:pointer;padding:10px 6px;margin:-10px -6px;-webkit-tap-highlight-color:transparent}
+.quack-pop{position:absolute;right:0;top:-14px;font-size:13px;font-weight:700;color:#FF8A1F;white-space:nowrap;pointer-events:none;text-shadow:0 1px 0 #fff,1px 0 0 #fff,-1px 0 0 #fff,0 -1px 0 #fff;animation:catPop 1.1s ease-out forwards}
 .duck-family .duckling{display:block;animation:dbob 1.6s ease-in-out infinite;margin-bottom:1px}
 .duck-family .mom{display:block;animation:dbob 2.2s ease-in-out infinite}
 .duck-family svg{display:block}
@@ -669,7 +671,7 @@ function showCall(pan,kind){
 /* ---------- audio engine ---------- */
 function Engine(){
   var AC=window.AudioContext||window.webkitAudioContext;
-  var c=new AC(),self=this;this.c=c;this.playing=false;this.mode=timeMode();this.night=this.mode==='night';this.dusk=this.mode==='dusk';
+  var c;try{c=new AC({latencyHint:'playback'})}catch(e){c=new AC()}var self=this;this.c=c;this.playing=false;this.mode=timeMode();this.night=this.mode==='night';this.dusk=this.mode==='dusk';
   var master=c.createGain();master.gain.value=0;
   var comp=c.createDynamicsCompressor();comp.threshold.value=-18;comp.ratio.value=3;comp.attack.value=.02;comp.release.value=.4;
   master.connect(comp);comp.connect(c.destination);this.master=master;
@@ -829,9 +831,9 @@ Engine.prototype.answer=function(pa){
   for(var i=0;i<Math.floor(rr(2,5));i++){this.tone(v,x,base*rr(.85,1.15),base*rr(.8,1.25),rr(.06,.12),.1);x+=rr(.1,.18)}
   setTimeout(function(){if(self.playing)showCall(pa.pan,'bird')},Math.max(0,(t-this.c.currentTime)*1000));
 };
-Engine.prototype.setMode=function(m){this.mode=m;this.night=m==='night';this.dusk=m==='dusk';this.nextChord=this.c.currentTime+.5;this.nextOwl=0;this.nextBird=this.c.currentTime+1.5;applyLevels()};
+Engine.prototype.setMode=function(m){this.mode=m;try{if(this.playing&&navigator.mediaSession&&navigator.mediaSession.metadata)navigator.mediaSession.metadata.title=MODE_TITLE[m]}catch(e){}this.night=m==='night';this.dusk=m==='dusk';this.nextChord=this.c.currentTime+.5;this.nextOwl=0;this.nextBird=this.c.currentTime+1.5;applyLevels()};
 Engine.prototype.start=function(){
-  var self=this,c=this.c;if(c.state==='suspended')c.resume();this.playing=true;
+  var self=this,c=this.c;if(c.state==='suspended')c.resume();this.playing=true;bgAudio(true);
   this.master.gain.cancelScheduledValues(c.currentTime);this.master.gain.setValueAtTime(this.master.gain.value,c.currentTime);this.master.gain.linearRampToValueAtTime(.9,c.currentTime+2.5);
   this.nextChord=c.currentTime+.1;this.nextBird=c.currentTime+1.2;this.nextPluck=c.currentTime+2;
   clearInterval(this.timer);this.timer=setInterval(function(){self.tick()},100);
@@ -839,8 +841,36 @@ Engine.prototype.start=function(){
 Engine.prototype.stop=function(){
   var c=this.c,self=this;this.playing=false;
   this.master.gain.cancelScheduledValues(c.currentTime);this.master.gain.setValueAtTime(this.master.gain.value,c.currentTime);this.master.gain.linearRampToValueAtTime(0,c.currentTime+1.2);
-  clearInterval(this.timer);setTimeout(function(){if(!self.playing)c.suspend()},1400);
+  clearInterval(this.timer);setTimeout(function(){if(!self.playing){c.suspend();bgAudio(false)}},1400);
 };
+/* a quiet media track keeps Chrome playing the garden when the screen is off,
+   and puts play/pause controls in the notification shade */
+var bgEl=null;
+function quietWav(){
+  var sr=8000,n=sr*12,b=new ArrayBuffer(44+n*2),v=new DataView(b);
+  function w(o,t){for(var i=0;i<t.length;i++)v.setUint8(o+i,t.charCodeAt(i))}
+  w(0,'RIFF');v.setUint32(4,36+n*2,true);w(8,'WAVE');w(12,'fmt ');v.setUint32(16,16,true);v.setUint16(20,1,true);v.setUint16(22,1,true);
+  v.setUint32(24,sr,true);v.setUint32(28,sr*2,true);v.setUint16(32,2,true);v.setUint16(34,16,true);w(36,'data');v.setUint32(40,n*2,true);
+  for(var i=0;i<n;i++)v.setInt16(44+i*2,(i%2?1:-1)*2,true);
+  return URL.createObjectURL(new Blob([b],{type:'audio/wav'}));
+}
+function bgAudio(on){
+  try{
+    if(on){
+      if(!bgEl){bgEl=document.createElement('audio');bgEl.loop=true;bgEl.setAttribute('playsinline','');bgEl.src=quietWav();bgEl.volume=.05}
+      var pr=bgEl.play();if(pr&&pr.catch)pr.catch(function(){});
+      if('mediaSession' in navigator){
+        var ms=navigator.mediaSession;
+        ms.metadata=new MediaMetadata({title:MODE_TITLE[timeMode()]||'Garden music',artist:'Smash Town',album:'Your cozy garden',artwork:[{src:'icon-512.png',sizes:'512x512',type:'image/png'},{src:'icon-192.png',sizes:'192x192',type:'image/png'}]});
+        ms.playbackState='playing';
+        try{ms.setActionHandler('pause',function(){if(window.onGardenRemote)window.onGardenRemote(false)})}catch(e){}
+        try{ms.setActionHandler('play',function(){if(window.onGardenRemote)window.onGardenRemote(true)})}catch(e){}
+        try{ms.setActionHandler('stop',function(){if(window.onGardenRemote)window.onGardenRemote(false)})}catch(e){}
+      }
+    }else if(bgEl){bgEl.pause();if('mediaSession' in navigator)navigator.mediaSession.playbackState='paused'}
+  }catch(e){}
+}
+var MODE_TITLE={day:'Daytime garden',dusk:'Dusk garden',night:'Night garden'};
 
 var E=null,modeT=null;
 function applyLevels(){
@@ -1429,6 +1459,13 @@ var act={
     else G.stop();
     render();renderMusic();
   },
+  'm-bg':function(){S.bgPlay=S.bgPlay===false;persist();sfx.tap();renderMusic()},
+  duck:function(b){
+    var now=Date.now();if(b._t&&now-b._t<450)return;b._t=now;
+    quack(1);setTimeout(function(){peep(2)},260);vib(8);
+    b.animate([{transform:'translateY(0)'},{transform:'translateY(-9px) rotate(-4deg)',offset:.4},{transform:'translateY(0)'}],{duration:420,easing:'ease-out'});
+    var q=document.createElement('span');q.className='quack-pop';q.textContent='Quack!';b.appendChild(q);setTimeout(function(){q.remove()},1100);
+  },
   'm-sw':function(b){
     var l=S.mix[b.dataset.l];if(!l)return;l.on=!l.on;persist();
     if(window.GardenMusic)window.GardenMusic.setMix(S.mix);
@@ -1464,7 +1501,9 @@ var act={
   'n-test':function(){showNote('\uD83D\uDD14 Smash Town test',{tag:'smash-test',body:'Notifications are working. Your timer will show here.',renotify:true});toast('Test sent. Pull down your notifications to check.')},
   five:openTimer,'close-timer':closeTimer,'t-go':timerGo
 };
-document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
+/* the ducks swim under the town's scroll layer, so find them by where the finger landed */
+function duckAt(x,y){var ds=document.querySelectorAll('.duck-family');for(var i=0;i<ds.length;i++){var r=ds[i].getBoundingClientRect();if(x>=r.left-12&&x<=r.right+12&&y>=r.top-14&&y<=r.bottom+10)return ds[i]}return null}
+document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b||b.closest('.scroller')&&!b.closest('.ti')){var d=duckAt(e.clientX,e.clientY);if(d)b=d}if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
 /* ---------- music sheet ---------- */
 var MODES={
   day:{name:'Daytime garden',hours:'6 AM to 6 PM',what:'Birds, breeze and soft music',ic:'<svg width="26" height="26" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="12" r="5" fill="#FFC93C"></circle><path d="M12 1v3M12 20v3M1 12h3M20 12h3M4.2 4.2l2.1 2.1M17.7 17.7l2.1 2.1M4.2 19.8l2.1-2.1M17.7 6.3l2.1-2.1" stroke="#FFE08A" stroke-width="2" stroke-linecap="round"></path></svg>'},
@@ -1485,6 +1524,8 @@ function renderMusic(){
     var st=S.mix[L.id],nm=typeof L.name==='string'?L.name:L.name[m];
     return '<div class="m-layer"><span class="m-ic" style="background:'+L.color+'"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true">'+L.icon+'</svg></span><div class="m-main"><label class="m-name" for="ml-'+L.id+'">'+nm+'</label><input type="range" id="ml-'+L.id+'" min="0" max="100" value="'+Math.round(st.vol*100)+'" data-l="'+L.id+'"'+(st.on?'':' disabled')+'></div><button class="switch" role="switch" aria-checked="'+st.on+'" aria-label="'+nm+'" data-act="m-sw" data-l="'+L.id+'"><span class="knob"></span></button></div>';
   }).join('')+'</div>';
+  var bg=S.bgPlay!==false;
+  h+='<div class="m-layer"><span class="m-ic" style="background:#7A4FD6"><svg width="24" height="24" viewBox="0 0 24 24" aria-hidden="true"><rect x="6" y="2" width="12" height="20" rx="3" fill="none" stroke="#fff" stroke-width="2.2"></rect><path d="M10 10.5v4.5l4-2.2z" fill="#fff"></path></svg></span><div class="m-main"><span class="m-name">Keep playing when the screen is off</span><small class="m-sub">Pause it anytime from your notifications</small></div><button class="switch" role="switch" aria-checked="'+bg+'" aria-label="Keep playing when the screen is off" data-act="m-bg"><span class="knob"></span></button></div>';
   h+='<p class="m-note">Your mix is saved. The garden follows your phone\'s clock: day, dusk and night.</p>';
   $('mBody').innerHTML=h;
 }
@@ -1511,9 +1552,15 @@ setInterval(function(){
 document.addEventListener('keydown',function(e){if(e.key==='Escape'){if(!$('musicSheet').hidden)$('musicSheet').hidden=true;if(!$('sheet').hidden)closeSheet();if(!$('timer').hidden)closeTimer();if(!$('monthEnd').hidden){$('monthEnd').hidden=true;render()}}});
 document.addEventListener('visibilitychange',function(){
   var G=window.GardenMusic;
-  if(document.visibilityState==='visible'){if(syncSeries())persist();render();checkMonth(townItems());if(S.music&&G&&musicArmed)G.start()}
-  else if(G)G.stop();
+  if(document.visibilityState==='visible'){if(syncSeries())persist();render();checkMonth(townItems());if(S.music&&G&&musicArmed&&!G.playing())G.start()}
+  else if(G&&S.bgPlay===false)G.stop();
 });
+/* play/pause from the notification shade or lock screen */
+window.onGardenRemote=function(on){
+  var G=window.GardenMusic;if(!G)return;S.music=on;persist();
+  if(on){G.setMix(S.mix);G.start()}else G.stop();
+  if(!$('musicSheet').hidden)renderMusic();
+};
 /* browsers only allow sound after a tap, so remembered music starts on the first touch */
 var musicArmed=false;
 function armMusic(e){
@@ -2064,7 +2111,7 @@ function spawnDucks(){
     for(var k=0;k<kids;k++)inner+='<span class="duckling" style="animation-delay:-'+(k*.35).toFixed(2)+'s">'+ducklingSVG()+'</span>';
     inner+='<span class="mom">'+duckSVG()+'</span>';
     /* the family lives inside the river's own lane, so it stays in the water when the town view grows or shrinks */
-    var W=sceneW(),el=document.createElement('div');el.className='amb-it duck-amb';el.innerHTML='<div class="duck-family">'+inner+'</div>';$('duckLane').appendChild(el);
+    var W=sceneW(),el=document.createElement('div');el.className='amb-it duck-amb';el.innerHTML='<div class="duck-family" data-act="duck" role="button" aria-label="Duck family. Tap to say hi">'+inner+'</div>';$('duckLane').appendChild(el);
     var fw=34+kids*23,dur=(24+Math.random()*6)*1000,loud=tm()!=='night';
     var a=el.animate([{transform:'translateX('+(-fw-10)+'px)'},{transform:'translateX('+(W+10)+'px)'}],{duration:dur,easing:'linear'});
     if(loud&&!document.hidden&&!reduce){setTimeout(function(){if(familyOut)quack(2)},dur*.22);setTimeout(function(){if(familyOut)peep(3)},dur*.3);setTimeout(function(){if(familyOut&&Math.random()<.6)quack(1)},dur*.62)}
@@ -2116,13 +2163,28 @@ function spawnFish(){
   later(spawnFish,10,24);
 }
 
+/* a soft airy whoosh that travels the same way the star flies (right to left) */
+var whooshBuf=null;
+function whoosh(){
+  var c=ctx();if(!c||document.hidden)return;
+  if(!whooshBuf){var n=c.sampleRate*1.6;whooshBuf=c.createBuffer(1,n,c.sampleRate);var d=whooshBuf.getChannelData(0),b=0;for(var i=0;i<n;i++){b=.94*b+(Math.random()*2-1)*.3;d[i]=b}}
+  var t=c.currentTime+.03,s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain(),p=c.createStereoPanner?c.createStereoPanner():null;
+  s.buffer=whooshBuf;f.type='bandpass';f.Q.value=1.4;f.frequency.setValueAtTime(2600,t);f.frequency.exponentialRampToValueAtTime(520,t+1.3);
+  g.gain.setValueAtTime(.0001,t);g.gain.exponentialRampToValueAtTime(.09,t+.28);g.gain.exponentialRampToValueAtTime(.0001,t+1.45);
+  s.connect(f);f.connect(g);
+  if(p){p.pan.setValueAtTime(.7,t);p.pan.linearRampToValueAtTime(-.7,t+1.4);g.connect(p);p.connect(c.destination)}else g.connect(c.destination);
+  s.start(t);s.stop(t+1.55);
+  /* a tiny sparkle at the start */
+  var o=c.createOscillator(),og=c.createGain();o.type='sine';o.frequency.setValueAtTime(2400,t);o.frequency.exponentialRampToValueAtTime(1600,t+.5);
+  og.gain.setValueAtTime(.0001,t);og.gain.linearRampToValueAtTime(.012,t+.05);og.gain.exponentialRampToValueAtTime(.0001,t+.55);o.connect(og);og.connect(c.destination);o.start(t);o.stop(t+.6);
+}
 /* shooting stars at night: tap one in time for a bonus coin */
 function spawnStar(){
   if(canRun()&&tm()==='night'){
     var W=sceneW(),x=W*(.45+Math.random()*.45),y=10+Math.random()*50;
     var el=ambAdd('<button class="shoot" data-act="shoot" aria-label="Shooting star. Tap it for a bonus coin"><span class="sh-rot"><span class="sh-tail"></span><span class="sh-head"></span></span></button>',true,'star-amb');
     var a=el.animate([{transform:'translate('+x+'px,'+y+'px)',opacity:0},{transform:'translate('+(x-30)+'px,'+(y+15)+'px)',opacity:1,offset:.15},{transform:'translate('+(x-190)+'px,'+(y+95)+'px)',opacity:0}],{duration:1500,easing:'ease-in'});
-    a.onfinish=function(){el.remove()};
+    a.onfinish=function(){el.remove()};whoosh();
   }
   later(spawnStar,14,34);
 }
