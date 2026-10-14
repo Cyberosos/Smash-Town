@@ -354,6 +354,10 @@ h2{margin:0;font-size:20px;font-weight:600}
 .scene.tall .bg-trees{bottom:96px}
 .bg-tree{position:absolute;bottom:-3px;transform:translateX(-50%);transform-origin:50% 100%;animation:bgsway 6s ease-in-out infinite}
 .bg-tree .canopy{transform-box:view-box;transform-origin:60px 90px;animation:canopySway 4.5s ease-in-out infinite}
+.duck-lane{position:absolute;left:0;right:0;bottom:64px;height:34px;pointer-events:none;transition:bottom .35s cubic-bezier(.3,1.2,.5,1),height .35s}
+.scene.tall .duck-lane{bottom:70px;height:40px}
+.duck-lane .amb-it{top:auto;bottom:calc(50% - 5px)}
+.duck-lane .splash{bottom:calc(50% - 4px)}
 .duck-family{display:flex;align-items:flex-end;gap:4px}
 .duck-family .duckling{display:block;animation:dbob 1.6s ease-in-out infinite;margin-bottom:1px}
 .duck-family .mom{display:block;animation:dbob 2.2s ease-in-out infinite}
@@ -532,6 +536,7 @@ h2{margin:0;font-size:20px;font-weight:600}
       <ellipse class="r-stone" cx="30" cy="36" rx="9" ry="4" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse><ellipse class="r-stone" cx="44" cy="38" rx="5" ry="3" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse>
       <ellipse class="r-stone" cx="300" cy="9" rx="8" ry="3.5" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse><ellipse class="r-stone" cx="180" cy="38" rx="6" ry="3" stroke="#4A1F12" stroke-width="2" vector-effect="non-scaling-stroke"></ellipse>
     </svg>
+    <div class="duck-lane" id="duckLane" aria-hidden="true"></div>
     <div class="amb" id="amb" aria-hidden="true"></div>
     <div class="scroller" id="scroller"><div class="row" id="row"></div></div>
     <div class="amb top" id="ambTop"></div>
@@ -2056,8 +2061,10 @@ function spawnDucks(){
     var kids=2+Math.floor(Math.random()*3),inner='';
     for(var k=0;k<kids;k++)inner+='<span class="duckling" style="animation-delay:-'+(k*.35).toFixed(2)+'s">'+ducklingSVG()+'</span>';
     inner+='<span class="mom">'+duckSVG()+'</span>';
-    var W=sceneW(),el=ambAdd('<div class="duck-family">'+inner+'</div>',false,'duck-amb'),y=riverMidY()-21,fw=34+kids*23,dur=(24+Math.random()*6)*1000,loud=tm()!=='night';
-    var a=el.animate([{transform:'translate('+(-fw-10)+'px,'+y+'px)'},{transform:'translate('+(W+10)+'px,'+(y+1)+'px)'}],{duration:dur,easing:'linear'});
+    /* the family lives inside the river's own lane, so it stays in the water when the town view grows or shrinks */
+    var W=sceneW(),el=document.createElement('div');el.className='amb-it duck-amb';el.innerHTML='<div class="duck-family">'+inner+'</div>';$('duckLane').appendChild(el);
+    var fw=34+kids*23,dur=(24+Math.random()*6)*1000,loud=tm()!=='night';
+    var a=el.animate([{transform:'translateX('+(-fw-10)+'px)'},{transform:'translateX('+(W+10)+'px)'}],{duration:dur,easing:'linear'});
     if(loud&&!document.hidden&&!reduce){setTimeout(function(){if(familyOut)quack(2)},dur*.22);setTimeout(function(){if(familyOut)peep(3)},dur*.3);setTimeout(function(){if(familyOut&&Math.random()<.6)quack(1)},dur*.62)}
     a.onfinish=function(){el.remove();familyOut=false;setTimeout(spawnDucks,20000)};
   }
@@ -2084,23 +2091,25 @@ function spawnBirds(){
 
 /* a fish jumps out of the stream with a little splash */
 function fishSVG(c){return '<svg width="24" height="15" viewBox="0 0 30 18"><path d="M21 9l8-7v14z" fill="'+c+'" stroke="'+INK+'" stroke-width="2" stroke-linejoin="round"></path><ellipse cx="13" cy="9" rx="10" ry="6" fill="'+c+'" stroke="'+INK+'" stroke-width="2.2"></ellipse><path d="M12 3.5q3 2.5 0 5" fill="none" stroke="'+INK+'" stroke-width="1.4" stroke-opacity=".5"></path><circle cx="7.5" cy="7.5" r="1.4" fill="'+INK+'"></circle></svg>'}
-function splash(x,y){
-  var el=ambAdd('<span class="ring"></span><span class="ring r2"></span><span class="drop d1"></span><span class="drop d2"></span>',false,'splash');
-  el.style.transform='translate('+(x-14)+'px,'+(y-6)+'px)';setTimeout(function(){el.remove()},900);
+/* fish and splashes also live in the river's lane, so they stay in the water when the view changes */
+function laneAdd(html,cls){var d=document.createElement('div');d.className='amb-it '+(cls||'');d.innerHTML=html;$('duckLane').appendChild(d);return d}
+function splash(x){
+  var el=laneAdd('<span class="ring"></span><span class="ring r2"></span><span class="drop d1"></span><span class="drop d2"></span>','splash');
+  el.style.transform='translateX('+(x-14)+'px)';setTimeout(function(){el.remove()},900);
 }
 function spawnFish(){
   if(canRun()){
-    var W=sceneW(),x=30+Math.random()*(W-90),y=riverMidY()-6,c=rnd(['#FF8A1F','#FF5FA2','#FFC93C','#7FB8FF']),ltr=Math.random()<.5,dx=ltr?34:-34;
-    var el=ambAdd('<div class="'+(ltr?'':'flip')+'">'+fishSVG(c)+'</div>',false,'fish-amb');
-    splash(x+12,y+8);
+    var W=sceneW(),x=30+Math.random()*(W-90),c=rnd(['#FF8A1F','#FF5FA2','#FFC93C','#7FB8FF']),ltr=Math.random()<.5,dx=ltr?34:-34;
+    var el=laneAdd('<div class="'+(ltr?'':'flip')+'">'+fishSVG(c)+'</div>','fish-amb');
+    splash(x+12);
     var a=el.animate([
-      {transform:'translate('+x+'px,'+y+'px) rotate('+(ltr?-50:50)+'deg)',opacity:0},
-      {transform:'translate('+(x+dx*.15)+'px,'+(y-14)+'px) rotate('+(ltr?-35:35)+'deg)',opacity:1,offset:.15},
-      {transform:'translate('+(x+dx*.5)+'px,'+(y-32)+'px) rotate(0deg)',opacity:1,offset:.5},
-      {transform:'translate('+(x+dx*.85)+'px,'+(y-14)+'px) rotate('+(ltr?35:-35)+'deg)',opacity:1,offset:.85},
-      {transform:'translate('+(x+dx)+'px,'+y+'px) rotate('+(ltr?50:-50)+'deg)',opacity:0}
+      {transform:'translate('+x+'px,4px) rotate('+(ltr?-50:50)+'deg)',opacity:0},
+      {transform:'translate('+(x+dx*.15)+'px,-10px) rotate('+(ltr?-35:35)+'deg)',opacity:1,offset:.15},
+      {transform:'translate('+(x+dx*.5)+'px,-28px) rotate(0deg)',opacity:1,offset:.5},
+      {transform:'translate('+(x+dx*.85)+'px,-10px) rotate('+(ltr?35:-35)+'deg)',opacity:1,offset:.85},
+      {transform:'translate('+(x+dx)+'px,4px) rotate('+(ltr?50:-50)+'deg)',opacity:0}
     ],{duration:1100,easing:'ease-in-out'});
-    a.onfinish=function(){el.remove();splash(x+dx+12,y+8)};
+    a.onfinish=function(){el.remove();splash(x+dx+12)};
   }
   later(spawnFish,10,24);
 }
