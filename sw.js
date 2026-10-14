@@ -1,5 +1,5 @@
 // Smash Town offline support: keeps the app working without internet.
-const CACHE = 'smash-town-v11';
+const CACHE = 'smash-town-v12';
 const FILES = ['./', './index.html', './manifest.webmanifest', './icon-192.png', './icon-512.png', './icon-maskable-512.png', './apple-touch-icon.png'];
 
 self.addEventListener('install', e => {
