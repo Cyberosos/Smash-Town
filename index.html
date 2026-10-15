@@ -1164,17 +1164,24 @@ function mallet(c,dest,f,t0,vol,dur){
     o.connect(g);g.connect(dest);o.start(t0);o.stop(t0+d+.05);
   });
 }
+/* tap sounds: flowers jingle like tiny keys, buildings plip like a water drop */
+var tapOut=null;
+function tapBus(c){if(!tapOut||tapOut.context!==c){tapOut=c.createBiquadFilter();tapOut.type='lowpass';tapOut.frequency.value=6500;tapOut.Q.value=.3;var g=c.createGain();g.gain.value=.9;tapOut.connect(g);g.connect(c.destination)}return tapOut}
+function tsine(c,f,t,a,v,d,f2){var o=c.createOscillator(),g=c.createGain();o.type='sine';o.frequency.setValueAtTime(f,t);if(f2)o.frequency.exponentialRampToValueAtTime(f2,t+a+d*.6);g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+a);g.gain.exponentialRampToValueAtTime(.0001,t+a+d);o.connect(g);g.connect(tapBus(c));o.start(t);o.stop(t+a+d+.05)}
+var tapNB=null;
+function tnoise(c,t,dur,freq,v){if(!tapNB||tapNB.sampleRate!==c.sampleRate){tapNB=c.createBuffer(1,c.sampleRate,c.sampleRate);var d=tapNB.getChannelData(0);for(var i=0;i<d.length;i++)d[i]=Math.random()*2-1}
+  var s=c.createBufferSource(),f=c.createBiquadFilter(),g=c.createGain();s.buffer=tapNB;f.type='highpass';f.frequency.value=freq;f.Q.value=.7;g.gain.setValueAtTime(.0001,t);g.gain.linearRampToValueAtTime(v,t+.002);g.gain.exponentialRampToValueAtTime(.0001,t+.002+dur);s.connect(f);f.connect(g);g.connect(tapBus(c));s.start(t,Math.random()*.5);s.stop(t+dur+.05)}
+function keyJingle(c,t,k){
+  var hits=3+Math.floor(Math.random()*2);
+  for(var i=0;i<hits;i++){var tt=t+i*(.035+Math.random()*.045),f=(2300+Math.random()*1500)*k*.85;
+    [[1,1],[2.76,.45],[5.4,.2],[8.93,.08]].forEach(function(h){tsine(c,f*h[0],tt,.002,.028*h[1],.22/(1+h[0]*.25))});
+    tnoise(c,tt,.012,5000,.05)}
+}
+function waterDrop(c,t,k){tsine(c,900*k,t,.002,.1,.06,1900*k);tsine(c,1400*k,t+.03,.002,.025,.08,1100*k)}
 function selectSound(kind){
   vib(8);var c=ctx();if(!c)return;var n=c.currentTime+.01;
-  var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=2600;lp.Q.value=.4;lp.connect(c.destination);
-  /* a soft bubble "bloop" first */
-  var b=c.createOscillator(),bg=c.createGain();b.type='sine';
-  b.frequency.setValueAtTime(260,n);b.frequency.exponentialRampToValueAtTime(620,n+.07);
-  bg.gain.setValueAtTime(0.0001,n);bg.gain.linearRampToValueAtTime(.16,n+.015);bg.gain.exponentialRampToValueAtTime(0.0001,n+.14);
-  b.connect(bg);bg.connect(lp);b.start(n);b.stop(n+.16);
-  /* then a two-note chime: plants sparkle high, houses sit in the middle, towers ring low and full */
-  var notes=kind==='plant'?[1046.5,1568]:(kind==='house'?[784,1174.7]:[523.25,784,1046.5]);
-  notes.forEach(function(f,i){mallet(c,lp,f,n+.05+i*.075,.2-i*.03,.9)});
+  if(kind==='plant')keyJingle(c,n,1.5);
+  else waterDrop(c,n,kind==='tower'?.88:1);
 }
 var sfx={
   smash:function(){vib([25,30,70]);var c=ctx();if(!c)return;var n=c.currentTime;noise(c,n,.18,2200,.5);tone(c,'sine',320,60,n,.25,.6);tone(c,'triangle',880,0,n+.08,.3,.22);tone(c,'triangle',1320,0,n+.16,.35,.2)},
