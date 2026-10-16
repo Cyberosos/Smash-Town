@@ -341,6 +341,7 @@ h2{margin:0;font-size:20px;font-weight:600}
 .rep-num{min-width:28px;text-align:center;font-size:18px;font-variant-numeric:tabular-nums}
 .rep-in{width:70px;height:40px;border:2px solid var(--line);border-radius:12px;background:var(--card);text-align:center;font-size:17px;font-weight:600;font-family:inherit;color:var(--ink);box-sizing:border-box}
 .rep-in.date{width:auto;padding:0 10px;text-align:left}
+.rep-ic.cal{background:#DCEBFF;color:#1F5FCC}
 .rep-tag{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--red-ink);margin-right:4px}
 .reps{display:flex;flex-direction:column;gap:8px}
 .rep-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:10px 12px;box-shadow:0 2px 0 var(--line)}
@@ -1489,12 +1490,15 @@ var act={
     var c=ctx();if(c){var n=c.currentTime;[1047,1319,1568,2093].forEach(function(f,i){tone(c,'triangle',f,0,n+i*.07,.5,.16)})}vib(15);
     toast('You caught a shooting star! <b>+1 coin</b>');commit();
   },
-  'rp-freq':function(b){RP.freq=b.dataset.v;if(RP.freq==='weekly'&&!RP.days.length)RP.days=[new Date().getDay()];sfx.tap();renderRepeat()},
+  'rp-freq':function(b){RP.freq=b.dataset.v;if(RP.freq==='once'&&RP.on===dayKey())RP.on=addDays(dayKey(),1);if(RP.freq==='weekly'&&!RP.days.length)RP.days=[new Date().getDay()];sfx.tap();renderRepeat()},
   'rp-n':function(b){RP.every=Math.max(1,Math.min(99,RP.every+(+b.dataset.d)));renderRepeat()},
   'rp-day':function(b){var v=+b.dataset.v,i=RP.days.indexOf(v);if(i>=0){if(RP.days.length>1)RP.days.splice(i,1)}else RP.days.push(v);renderRepeat()},
   'rp-end':function(b){RP.end=b.dataset.v;sfx.tap();renderRepeat()},
   'rp-cnt':function(b){RP.count=Math.max(1,Math.min(999,(RP.count||1)+(+b.dataset.d)));renderRepeat()},
-  'rep-stop':function(b,id){var sr=findSeries(id);if(!sr)return;sr.stopped=true;ui.menu=null;sfx.undo();toast('<b>'+esc(sr.title)+'</b> will not repeat anymore. Today\'s one stays.');commit()},
+  'rep-stop':function(b,id){var sr=findSeries(id);if(!sr)return;sr.stopped=true;ui.menu=null;sfx.undo();
+    if(sr.repeat.freq==='once'){S.tasks=S.tasks.filter(function(t){return !(t.seriesId===sr.id&&!t.done&&!(t.kind==='big'&&t.steps.some(function(x){return x.done})))});sr.hidden=true;toast('<b>'+esc(sr.title)+'</b> is canceled.')}
+    else toast('<b>'+esc(sr.title)+'</b> will not repeat anymore. Today\'s one stays.');commit()},
+  'rp-notime':function(){RP.time='';sfx.tap();renderRepeat()},
   'rep-hide':function(b,id){var sr=findSeries(id);if(!sr)return;sr.hidden=true;sr.stopped=true;sfx.tap();commit()},
   ttimer:function(b,id){openTaskTimer(id)},
   't-open':function(b,id){openTaskTimer(id)},
@@ -1536,7 +1540,7 @@ function renderMusic(){
   h+='<p class="m-note">Your mix is saved. The garden follows your phone\'s clock: day, dusk and night.</p>';
   $('mBody').innerHTML=h;
 }
-$('repBox').addEventListener('input',function(e){if(!RP)return;if(e.target.id==='repCount'){RP.count=Math.max(1,Math.min(999,parseInt(e.target.value,10)||1))}if(e.target.id==='repDate'){RP.date=e.target.value}rpRefreshSum()});
+$('repBox').addEventListener('input',function(e){if(!RP)return;if(e.target.id==='repCount'){RP.count=Math.max(1,Math.min(999,parseInt(e.target.value,10)||1))}if(e.target.id==='repDate'){RP.date=e.target.value}if(e.target.id==='repOn'&&e.target.value){RP.on=e.target.value}if(e.target.id==='repTime'){var had=!!RP.time;RP.time=e.target.value;if(had!==!!RP.time){renderRepeat();var ti=$('repTime');if(ti)ti.focus();return}}rpRefreshSum()});
 var mixSaveT=null;
 $('mBody').addEventListener('input',function(e){
   var id=e.target.dataset&&e.target.dataset.l;if(!id||!S.mix[id])return;
@@ -1548,7 +1552,13 @@ if(window.GardenMusic)window.GardenMusic.setMix(S.mix);
 /* ---------- day, dusk and night ---------- */
 function tm(){var h=new Date().getHours();return (h>=20||h<6)?'night':(h>=18?'dusk':'day')}
 var lastMode=tm(),lastDay=dayKey();
-setInterval(function(){var d=dayKey();if(d!==lastDay){lastDay=d;if(syncSeries())persist();render()}},30000);
+setInterval(function(){var d=dayKey();if(d!==lastDay){lastDay=d;if(syncSeries())persist();render()}
+  /* a gentle nudge when a task's time arrives (only while the app is open or playing music) */
+  var now=new Date(),hm=('0'+now.getHours()).slice(-2)+':'+('0'+now.getMinutes()).slice(-2),hit=false;
+  S.tasks.forEach(function(t){if(t.time&&!t.done&&!t.nudged&&t.occ===d&&t.time<=hm){t.nudged=true;hit=true;
+    toast('\u23F0 It\'s time for <b>'+esc(t.title)+'</b>');try{showNote('\u23F0 '+t.title,{tag:'smash-'+t.id,body:'It\'s time. Smash it when you\'re done!',renotify:true})}catch(e){}}});
+  if(hit)persist();
+},30000);
 function applyTime(){var m=tm(),sc=$('scene');sc.classList.toggle('dusk',m==='dusk');sc.classList.toggle('night',m==='night')}
 setInterval(function(){
   var m=tm();if(m===lastMode)return;lastMode=m;applyTime();
@@ -1586,6 +1596,7 @@ function addDays(k,n){var d=k2d(k);d.setDate(d.getDate()+n);return dayKey(d)}
 function isDue(sr,k){
   if(k<sr.start)return false;
   var r=sr.repeat,n=r.every||1,a=k2d(sr.start),d=k2d(k),last;
+  if(r.freq==='once')return k===sr.start;
   if(r.freq==='daily')return ddiff(sr.start,k)%n===0;
   if(r.freq==='weekly'){
     var ws=new Date(a);ws.setDate(a.getDate()-a.getDay());var wd=new Date(d);wd.setDate(d.getDate()-d.getDay());
@@ -1616,13 +1627,18 @@ function inRange(sr,k){
 }
 function dueToday(sr,k){return !sr.stopped&&isDue(sr,k)&&inRange(sr,k)&&(sr.skipped||[]).indexOf(k)<0}
 function nextDue(sr,from){var cur=from;for(var i=0;i<4000;i++){if(!sr.stopped&&isDue(sr,cur)&&inRange(sr,cur)&&(sr.skipped||[]).indexOf(cur)<0)return cur;if(!inRange(sr,cur)&&sr.repeat.end&&sr.repeat.end.type!=='never'&&cur>sr.start)return null;cur=addDays(cur,1)}return null}
+function fmtTime(hm){if(!hm)return '';var p=hm.split(':'),d=new Date();d.setHours(+p[0],+p[1],0,0);return d.toLocaleTimeString(undefined,{hour:'numeric',minute:'2-digit'})}
+var CAL_ICON='<svg width="15" height="15" viewBox="0 0 24 24" aria-hidden="true" style="vertical-align:-2px"><rect x="3.5" y="5" width="17" height="15.5" rx="3" fill="none" stroke="currentColor" stroke-width="2.4"></rect><path d="M3.5 10h17M8 3v4M16 3v4" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"></path></svg>';
 function findSeries(id){for(var i=0;i<(S.series||[]).length;i++)if(S.series[i].id===id)return S.series[i];return null}
 function ruleText(sr){
   var r=sr.repeat,n=r.every||1,a=k2d(sr.start),t;
+  if(r.freq==='once')return 'Once on '+a.toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric',year:a.getFullYear()!==new Date().getFullYear()?'numeric':undefined})+(sr.time?' at '+fmtTime(sr.time):'');
   if(r.freq==='daily')t=n===1?'Every day':'Every '+n+' days';
   else if(r.freq==='weekly')t=(n===1?'Every week':'Every '+n+' weeks')+' on '+(r.days||[]).slice().sort().map(function(x){return DOW[x]}).join(', ');
   else if(r.freq==='monthly')t=(n===1?'Every month':'Every '+n+' months')+' on day '+a.getDate();
   else t=(n===1?'Every year':'Every '+n+' years')+' on '+a.toLocaleDateString(undefined,{month:'short',day:'numeric'});
+  if(sr.time)t+=' at '+fmtTime(sr.time);
+  if(sr.start>dayKey())t+=' · starts '+a.toLocaleDateString(undefined,{month:'short',day:'numeric'});
   var e=r.end||{type:'never'};
   if(e.type==='count')t+=' · '+e.count+' times';
   else if(e.type==='date'&&e.date)t+=' · until '+k2d(e.date).toLocaleDateString(undefined,{month:'short',day:'numeric',year:'numeric'});
@@ -1630,8 +1646,9 @@ function ruleText(sr){
 }
 function repLabel(t){
   var sr=t.seriesId?findSeries(t.seriesId):null;if(!sr)return '';
-  var e=sr.repeat.end||{},f={daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[sr.repeat.freq];
-  return '<span class="rep-tag">'+REP_ICON+' '+f+(e.type==='count'?' · '+(t.n||1)+' of '+e.count:'')+'</span>';
+  var e=sr.repeat.end||{},once=sr.repeat.freq==='once',f={once:'Scheduled',daily:'Daily',weekly:'Weekly',monthly:'Monthly',yearly:'Yearly'}[sr.repeat.freq];
+  var tm=t.time||sr.time;
+  return '<span class="rep-tag">'+(once?CAL_ICON:REP_ICON)+' '+f+(e.type==='count'?' · '+(t.n||1)+' of '+e.count:'')+(tm?' · '+fmtTime(tm):'')+'</span>';
 }
 /* makes today's copy of every repeating task, and quietly clears missed ones */
 function syncSeries(){
@@ -1640,6 +1657,7 @@ function syncSeries(){
   var before=S.tasks.length;
   S.tasks=S.tasks.filter(function(t){
     if(!t.seriesId||t.done||!t.occ||t.occ>=td)return true;
+    var srx=findSeries(t.seriesId);if(srx&&srx.repeat.freq==='once')return true;
     if(t.kind==='big'&&t.steps.some(function(s){return s.done}))return true;
     return false;
   });
@@ -1647,7 +1665,7 @@ function syncSeries(){
   S.series.forEach(function(sr){
     if(!dueToday(sr,td))return;
     if(S.tasks.some(function(t){return t.seriesId===sr.id&&t.occ===td}))return;
-    var now=Date.now(),t={id:uid(),kind:sr.kind,title:sr.title,createdAt:now,done:false,doneAt:null,doneDay:null,seriesId:sr.id,occ:td,n:occIndex(sr,td)};
+    var now=Date.now(),t={id:uid(),kind:sr.kind,title:sr.title,createdAt:now,done:false,doneAt:null,doneDay:null,seriesId:sr.id,occ:td,n:occIndex(sr,td),time:sr.time||''};
     if(sr.kind==='big'){t.look=bigLook();t.steps=sr.steps.map(function(x){return{id:uid(),text:x,done:false,doneAt:null}})}
     else{t.color=rnd(TASKC);t.look=quickLook()}
     S.tasks.push(t);changed=true;
@@ -1658,33 +1676,41 @@ function repeatsHTML(){
   var list=(S.series||[]).filter(function(sr){return !sr.hidden});
   if(!list.length)return '';
   var td=dayKey(),tm2=addDays(td,1);
-  return '<div class="sec-head"><h2>Repeating</h2><span class="sec-meta">'+list.length+'</span></div><div class="reps">'+list.map(function(sr){
-    var todayInst=S.tasks.filter(function(t){return t.seriesId===sr.id&&t.occ===td})[0];
+  list=list.slice().sort(function(a,b){var ao=a.repeat.freq==='once'?a.start:'0',bo=b.repeat.freq==='once'?b.start:'0';return ao<bo?-1:ao>bo?1:0});
+  return '<div class="sec-head"><h2>Repeating &amp; Scheduled</h2><span class="sec-meta">'+list.length+'</span></div><div class="reps">'+list.map(function(sr){
+    var once=sr.repeat.freq==='once';
+    var todayInst=S.tasks.filter(function(t){return t.seriesId===sr.id&&(t.occ===td||once)})[0];
     var from=(todayInst&&todayInst.done)||!dueToday(sr,td)?tm2:td;
     var nx=sr.stopped?null:nextDue(sr,from),when;
-    if(sr.stopped)when='Stopped';
-    else if(!nx)when='Finished';
-    else when='Next: '+(nx===td?'Today':nx===tm2?'Tomorrow':k2d(nx).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}));
+    if(once&&todayInst&&!todayInst.done){nx=td}
+    if(sr.stopped)when=once?'Canceled':'Stopped';
+    else if(!nx)when=once?'Done':'Finished';
+    else when=(once?'':'Next: ')+(nx===td?'Today':nx===tm2?'Tomorrow':k2d(nx).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}))+(once&&nx>tm2?' · in '+ddiff(td,nx)+' days':'');
     var done=S.tasks.filter(function(t){return t.seriesId===sr.id&&t.done}).length;
     var live=!sr.stopped&&nx;
-    return '<div class="rep-card'+(live?'':' over')+'"><span class="rep-ic">'+REP_ICON.replace('width="15" height="15"','width="22" height="22"')+'</span><div class="t-main"><div class="t-title">'+esc(sr.title)+'</div><div class="t-sub">'+esc(ruleText(sr))+'</div><div class="t-sub"><b>'+when+'</b> · '+done+' smashed</div></div>'+
-      (live?'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">Stop</button>':'<button class="btn-sm" data-act="rep-hide" data-id="'+sr.id+'">Remove</button>')+'</div>';
+    return '<div class="rep-card'+(live?'':' over')+'"><span class="rep-ic'+(once?' cal':'')+'">'+(once?CAL_ICON:REP_ICON).replace('width="15" height="15"','width="22" height="22"')+'</span><div class="t-main"><div class="t-title">'+esc(sr.title)+'</div><div class="t-sub">'+esc(ruleText(sr))+'</div><div class="t-sub"><b>'+when+'</b>'+(once?'':' · '+done+' smashed')+'</div></div>'+
+      (live?'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">'+(once?'Cancel':'Stop')+'</button>':'<button class="btn-sm" data-act="rep-hide" data-id="'+sr.id+'">Remove</button>')+'</div>';
   }).join('')+'</div>';
 }
 
 /* the repeat picker inside "New task" */
 var RP=null;
-function resetRP(){RP={freq:'none',every:1,days:[new Date().getDay()],end:'never',count:30,date:addDays(dayKey(),30)}}
+function resetRP(){RP={freq:'none',every:1,days:[new Date().getDay()],end:'never',count:30,date:addDays(dayKey(),30),on:dayKey(),time:''}}
 function rpUnit(){var n=RP.every,u={daily:'day',weekly:'week',monthly:'month',yearly:'year'}[RP.freq]||'day';return n===1?u:u+'s'}
 function rpSummary(){
-  if(RP.freq==='none')return 'Does not repeat';
-  return ruleText({start:dayKey(),repeat:{freq:RP.freq,every:RP.every,days:RP.days,end:RP.end==='count'?{type:'count',count:RP.count}:RP.end==='date'?{type:'date',date:RP.date}:{type:'never'}}});
+  if(RP.freq==='none')return 'Just for today';
+  return ruleText({start:RP.on||dayKey(),time:RP.time,repeat:{freq:RP.freq,every:RP.every,days:RP.days,end:RP.end==='count'?{type:'count',count:RP.count}:RP.end==='date'?{type:'date',date:RP.date}:{type:'never'}}});
 }
 function renderRepeat(){
-  var F=[['none','Once'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['yearly','Yearly']];
-  var h='<div class="rep-head"><span class="sw-title">'+REP_ICON.replace('width="15" height="15"','width="18" height="18"')+' Repeat</span><span class="sw-sub" id="repSum">'+esc(rpSummary())+'</span></div>';
-  h+='<div class="rchips" role="group" aria-label="Repeat">'+F.map(function(f){return '<button type="button" class="rchip" data-act="rp-freq" data-v="'+f[0]+'" aria-pressed="'+(RP.freq===f[0])+'">'+f[1]+'</button>'}).join('')+'</div>';
+  var F=[['none','Today only'],['once','Pick a date'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['yearly','Yearly']];
+  var h='<div class="rep-head"><span class="sw-title">'+REP_ICON.replace('width="15" height="15"','width="18" height="18"')+' Repeat or schedule</span><span class="sw-sub" id="repSum">'+esc(rpSummary())+'</span></div>';
+  h+='<div class="rchips" role="group" aria-label="Repeat or schedule">'+F.map(function(f){return '<button type="button" class="rchip" data-act="rp-freq" data-v="'+f[0]+'" aria-pressed="'+(RP.freq===f[0])+'">'+f[1]+'</button>'}).join('')+'</div>';
   if(RP.freq!=='none'){
+    var once=RP.freq==='once';
+    h+='<div class="rep-row"><label for="repOn">'+(once?'On':'Starts')+'</label><input id="repOn" class="rep-in date" type="date" min="'+dayKey()+'" value="'+RP.on+'"></div>';
+    h+='<div class="rep-row"><label for="repTime">At</label><input id="repTime" class="rep-in date" type="time" value="'+RP.time+'">'+(RP.time?'<button type="button" class="btn-sm" data-act="rp-notime">No time</button>':'<span class="rep-sub">optional</span>')+'</div>';
+  }
+  if(RP.freq!=='none'&&RP.freq!=='once'){
     h+='<div class="rep-row"><span>Every</span><button type="button" class="stepper" data-act="rp-n" data-d="-1" aria-label="Less often">−</button><b class="rep-num">'+RP.every+'</b><button type="button" class="stepper" data-act="rp-n" data-d="1" aria-label="More apart">+</button><span>'+rpUnit()+'</span></div>';
     if(RP.freq==='weekly')h+='<div class="rchips days" role="group" aria-label="Days of the week">'+DOW.map(function(d,i){return '<button type="button" class="rchip day" data-act="rp-day" data-v="'+i+'" aria-pressed="'+(RP.days.indexOf(i)>=0)+'" aria-label="'+d+'">'+d.charAt(0)+'</button>'}).join('')+'</div>';
     h+='<div class="rep-sub">Ends</div><div class="rchips" role="group" aria-label="Ends">'+[['never','Never'],['count','After a number of times'],['date','On a date']].map(function(e){return '<button type="button" class="rchip" data-act="rp-end" data-v="'+e[0]+'" aria-pressed="'+(RP.end===e[0])+'">'+e[1]+'</button>'}).join('')+'</div>';
@@ -1741,11 +1767,15 @@ $('addForm').addEventListener('submit',function(e){
     if(on){readSteps();stepsT=sheetSteps.map(function(s){return s.text.trim()}).filter(Boolean);if(stepsT.length<2){$('formErr').textContent='Add at least 2 steps, or turn the switch off for a quick task.';return}}
     var ci=$('repCount');if(ci)RP.count=Math.max(1,Math.min(999,parseInt(ci.value,10)||1));
     var di=$('repDate');if(di&&di.value)RP.date=di.value;
+    var oi=$('repOn');if(oi&&oi.value)RP.on=oi.value;var ti=$('repTime');if(ti)RP.time=ti.value||'';
+    if(!RP.on||RP.on<dayKey()){$('formErr').textContent='Pick a date from today on.';return}
+    if(RP.freq==='weekly'&&RP.on>dayKey()&&RP.days.length===1&&RP.days[0]===new Date().getDay())RP.days=[k2d(RP.on).getDay()];
     if(RP.end==='date'&&(!RP.date||RP.date<dayKey())){$('formErr').textContent='Pick an end date from today on.';return}
-    var sr={id:uid(),kind:on?'big':'quick',title:title,steps:stepsT,start:dayKey(),createdAt:now,skipped:[],
-      repeat:{freq:RP.freq,every:RP.every,days:RP.days.slice(),end:RP.end==='count'?{type:'count',count:RP.count}:RP.end==='date'?{type:'date',date:RP.date}:{type:'never'}}};
+    var sr={id:uid(),kind:on?'big':'quick',title:title,steps:stepsT,start:RP.on,time:RP.time||'',createdAt:now,skipped:[],
+      repeat:{freq:RP.freq,every:RP.every,days:RP.days.slice(),end:RP.freq==='once'?{type:'never'}:RP.end==='count'?{type:'count',count:RP.count}:RP.end==='date'?{type:'date',date:RP.date}:{type:'never'}}};
     S.series=(S.series||[]).concat([sr]);syncSeries();closeSheet();ui.view='today';sfx.ding();commit();
     var nx=nextDue(sr,dayKey());
+    if(RP.freq==='once'){toast('Scheduled: <b>'+esc(ruleText(sr).replace('Once on ',''))+'</b>. '+(nx===dayKey()?'It\'s in Today now.':'It will show up in Today on that day.'));return}
     toast('Repeating: <b>'+esc(ruleText(sr))+'</b>. '+(nx===dayKey()?'Today\'s one is ready.':(nx?'First one on '+k2d(nx).toLocaleDateString(undefined,{weekday:'long'})+'.':'')));
     return;
   }
