@@ -216,6 +216,14 @@ h2{margin:0;font-size:20px;font-weight:600}
 .t-title{font-size:17px;font-weight:500;overflow-wrap:anywhere}
 .task.done>.t-main .t-title,.task.big.done .t-title{text-decoration:line-through;color:var(--muted)}
 .t-sub{font-size:13px;color:var(--muted)}
+.grip{width:24px;height:44px;margin:0 -6px 0 -8px;flex-shrink:0;border:0;background:none;padding:0;display:grid;place-items:center;color:var(--muted);opacity:.45;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.grip:hover,.grip:focus-visible,.task.dragging .grip{opacity:1}
+.task.dragging{position:relative;z-index:5;box-sizing:border-box;box-shadow:0 14px 28px rgba(74,31,18,.22),0 3px 0 var(--c);transform:scale(1.02);transition:box-shadow .15s}
+.task.dragging .grip{color:var(--muted);cursor:grabbing}
+.drop-slot{border:2.5px dashed var(--line);border-radius:20px;box-sizing:border-box}
+.imp-tag{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:#C77A00;margin-right:6px}
+.task.imp{box-shadow:0 3px 0 var(--c),inset 0 0 0 2px #FFC93C}
+body.dragging-on{-webkit-user-select:none;user-select:none}
 .more{width:44px;height:44px;flex-shrink:0;border:0;background:none;border-radius:12px;display:grid;place-items:center;cursor:pointer;color:var(--muted)}
 .menu{flex-basis:100%;display:flex;gap:8px;align-items:center;justify-content:flex-end;flex-wrap:wrap;padding-top:8px;border-top:1px dashed var(--line)}
 .menu span{margin-right:auto;font-size:14px;font-weight:500}
@@ -1277,8 +1285,8 @@ function monthStats(mi){var b=mi.filter(function(x){return x.kind!=='plant'}).le
 /* ---------- today view ---------- */
 function quickHTML(t){
   var pop=ui.justDone===t.id?' pop':'';
-  var sub=repLabel(t)+(t.done?'Smashed! '+esc(normLook(t.look).name)+' joined your town':'+'+R.quick+' coins · a surprise for your town');
-  return '<div class="task'+(t.done?' done':'')+'" style="--c:'+t.color+'">'+
+  var sub=(t.imp&&!t.done?'<span class="imp-tag">\u2605 Important</span>':'')+repLabel(t)+(t.done?'Smashed! '+esc(normLook(t.look).name)+' joined your town':'+'+R.quick+' coins · a surprise for your town');
+  return '<div class="task'+(t.done?' done':'')+(t.imp&&!t.done?' imp':'')+'" data-tid="'+t.id+'" style="--c:'+t.color+'">'+(t.done?'':'<button class="grip" data-drag="'+t.id+'" aria-label="Drag to reorder '+esc(t.title)+'"><svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true"><g fill="currentColor"><circle cx="4" cy="5" r="1.9"></circle><circle cx="10" cy="5" r="1.9"></circle><circle cx="4" cy="11" r="1.9"></circle><circle cx="10" cy="11" r="1.9"></circle><circle cx="4" cy="17" r="1.9"></circle><circle cx="10" cy="17" r="1.9"></circle></g></svg></button>')+
     '<button class="smash'+pop+'" data-act="toggle" data-id="'+t.id+'" aria-pressed="'+(t.done?'true':'false')+'" aria-label="'+(t.done?'Undo: ':'Smash: ')+esc(t.title)+'">'+CHECK+'</button>'+
     '<div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+timerBtn(t)+
     '<button class="more" data-act="menu" data-id="'+t.id+'" aria-expanded="'+(ui.menu===t.id)+'" aria-label="Options for '+esc(t.title)+'">'+DOTS+'</button>'+menuHTML(t)+'</div>';
@@ -1291,9 +1299,9 @@ function bigHTML(t){
     var pop=ui.justDone===s.id?' pop':'';
     return '<button class="step'+(s.done?' done':'')+(k===next?' next':'')+pop+'" data-act="step" data-id="'+t.id+'" data-sid="'+s.id+'" aria-pressed="'+(s.done?'true':'false')+'" aria-label="'+(s.done?'Undo floor ':'Build floor ')+(k+1)+': '+esc(s.text)+'"><span class="dot">'+(s.done?CHECK_S:'F'+(k+1))+'</span><span class="s-text">'+esc(s.text)+'</span><span class="s-coin">+'+R.step+'</span></button>';
   }).join('');
-  var sub=repLabel(t)+(t.done?'Built! '+esc(t.look.name)+' stands in your town':b+' of '+n+' floors · '+esc(t.look.name));
-  return '<div class="task big'+(t.done?' done':'')+'" style="--c:'+t.look.color+'">'+
-    '<div class="big-head"><span class="big-icon">'+(t.done?HOUSE:CRANE)+'</span><div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+timerBtn(t)+
+  var sub=(t.imp&&!t.done?'<span class="imp-tag">\u2605 Important</span>':'')+repLabel(t)+(t.done?'Built! '+esc(t.look.name)+' stands in your town':b+' of '+n+' floors · '+esc(t.look.name));
+  return '<div class="task big'+(t.done?' done':'')+(t.imp&&!t.done?' imp':'')+'" data-tid="'+t.id+'" style="--c:'+t.look.color+'">'+
+    '<div class="big-head">'+(t.done?'':'<button class="grip" data-drag="'+t.id+'" aria-label="Drag to reorder '+esc(t.title)+'"><svg width="14" height="22" viewBox="0 0 14 22" aria-hidden="true"><g fill="currentColor"><circle cx="4" cy="5" r="1.9"></circle><circle cx="10" cy="5" r="1.9"></circle><circle cx="4" cy="11" r="1.9"></circle><circle cx="10" cy="11" r="1.9"></circle><circle cx="4" cy="17" r="1.9"></circle><circle cx="10" cy="17" r="1.9"></circle></g></svg></button>')+'<span class="big-icon">'+(t.done?HOUSE:CRANE)+'</span><div class="t-main"><div class="t-title">'+esc(t.title)+'</div><div class="t-sub">'+sub+'</div></div>'+timerBtn(t)+
     '<button class="more" data-act="menu" data-id="'+t.id+'" aria-expanded="'+(ui.menu===t.id)+'" aria-label="Options for '+esc(t.title)+'">'+DOTS+'</button></div>'+
     '<div class="floorbar" aria-hidden="true">'+bar+'</div><div class="steps">'+steps+'</div>'+menuHTML(t)+'</div>';
 }
@@ -1309,16 +1317,19 @@ function menuHTML(t){
   if(ui.menu!==t.id)return '';
   var tower=t.kind==='big'&&!t.done,sr=t.seriesId?findSeries(t.seriesId):null;
   if(sr&&ui.confirmDel===t.id)return '<div class="menu"><span>Skip it just for today? It comes back on its next day.</span><button class="btn-sm" data-act="del-no">Keep</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Skip today</button></div>';
-  if(sr)return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button><button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button>'+(sr.stopped?'':'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">Stop repeating</button>')+(t.done?'':'<button class="btn-sm danger" data-act="del" data-id="'+t.id+'">Skip today</button>')+'</div>';
+  if(sr)return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button>'+(t.done?'':'<button class="btn-sm" data-act="imp" data-id="'+t.id+'">'+(t.imp?'Not important':'\u2605 Important')+'</button><button class="btn-sm" data-act="to-top" data-id="'+t.id+'">Move to top</button>')+'<button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button>'+(sr.stopped?'':'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">Stop repeating</button>')+(t.done?'':'<button class="btn-sm danger" data-act="del" data-id="'+t.id+'">Skip today</button>')+'</div>';
   if(ui.confirmDel===t.id)return tower
     ?'<div class="menu"><span>Cancel this tower? The whole building and all its floors will be removed.</span><button class="btn-sm" data-act="del-no">Keep building</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Remove tower</button></div>'
     :'<div class="menu"><span>Delete it and its spot in town?</span><button class="btn-sm" data-act="del-no">Keep</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Delete</button></div>';
-  return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button><button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button><button class="btn-sm danger" data-act="del" data-id="'+t.id+'">'+(tower?'Cancel tower':'Delete task')+'</button></div>';
+  return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button>'+(t.done?'':'<button class="btn-sm" data-act="imp" data-id="'+t.id+'">'+(t.imp?'Not important':'\u2605 Important')+'</button><button class="btn-sm" data-act="to-top" data-id="'+t.id+'">Move to top</button>')+'<button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button><button class="btn-sm danger" data-act="del" data-id="'+t.id+'">'+(tower?'Cancel tower':'Delete task')+'</button></div>';
 }
+function moveTop(t){var m=Infinity;S.tasks.forEach(function(x){if(x!==t&&!x.done)m=Math.min(m,taskKey(x))});t.order=(m===Infinity?0:m)-1}
+/* your own order: dragged tasks get small numbers, new ones fall in at the bottom */
+function taskKey(t){return t.order!=null?t.order:t.createdAt}
 function renderToday(){
   var td=dayKey();
   var list=S.tasks.filter(function(t){return !t.done||t.doneDay===td});
-  list.sort(function(a,b){if(a.done!==b.done)return a.done?1:-1;return a.createdAt-b.createdAt});
+  list.sort(function(a,b){if(a.done!==b.done)return a.done?1:-1;return taskKey(a)-taskKey(b)});
   var doneToday=0;S.tasks.forEach(function(t){if(t.kind==='quick'&&t.done&&t.doneDay===td)doneToday++;if(t.kind==='big')t.steps.forEach(function(s){if(s.done&&s.doneAt&&dayKey(new Date(s.doneAt))===td)doneToday++})});
   var h='<div class="sec-head"><h2>Tiny steps</h2><span class="sec-meta">'+doneToday+' smashed today</span></div>';
   if(S.tasks.some(function(t){return t.ex}))h+='<div class="banner"><span>These are example tasks to play with.</span><button class="link-btn" data-act="clear-ex">Clear examples</button></div>';
@@ -1439,6 +1450,8 @@ var act={
       s.done=false;s.doneAt=null;if(t.done){t.done=false;t.doneAt=null;t.doneDay=null}sfx.undo();commit();
     }
   },
+  imp:function(b,id){var t=find(id);if(!t)return;t.imp=!t.imp;if(t.imp)moveTop(t);ui.menu=null;sfx.tap();commit();if(t.imp)toast('\u2605 <b>'+esc(t.title)+'</b> is marked important and moved to the top.')},
+  'to-top':function(b,id){var t=find(id);if(!t)return;moveTop(t);ui.menu=null;sfx.tap();commit()},
   menu:function(b,id){sfx.tap();ui.menu=ui.menu===id?null:id;ui.confirmDel=null;render()},
   del:function(b,id){ui.confirmDel=id;render()},
   'del-no':function(){ui.confirmDel=null;ui.menu=null;render()},
@@ -1512,6 +1525,55 @@ var act={
   'n-test':function(){showNote('\uD83D\uDD14 Smash Town test',{tag:'smash-test',body:'Notifications are working. Your timer will show here.',renotify:true});toast('Test sent. Pull down your notifications to check.')},
   five:openTimer,'close-timer':closeTimer,'t-go':timerGo
 };
+/* drag the dotted handle to put tasks in your own order */
+(function(){
+  var D=null;
+  function cards(){return Array.prototype.slice.call(document.querySelectorAll('.tasks>.task:not(.done)'))}
+  document.addEventListener('pointerdown',function(e){
+    var g=e.target.closest&&e.target.closest('.grip');if(!g||e.button>0)return;
+    var card=g.closest('.task');if(!card)return;e.preventDefault();
+    var r=card.getBoundingClientRect(),slot=document.createElement('div');slot.className='drop-slot';slot.style.height=r.height+'px';
+    D={id:g.dataset.drag,card:card,slot:slot,y0:e.clientY,top:r.top,pid:e.pointerId,moved:false,scrollY:window.scrollY};
+    try{g.setPointerCapture(e.pointerId)}catch(x){}
+  });
+  function start(){
+    var c=D.card,r=c.getBoundingClientRect();D.moved=true;
+    c.parentNode.insertBefore(D.slot,c);c.classList.add('dragging');document.body.classList.add('dragging-on');
+    c.style.position='fixed';c.style.left=r.left+'px';c.style.width=r.width+'px';c.style.top=r.top+'px';c.style.margin='0';
+    vib(10);try{var cx=ctx();if(cx){var n=cx.currentTime;tone(cx,'sine',520,0,n,.08,.05)}}catch(x){}
+  }
+  document.addEventListener('pointermove',function(e){
+    if(!D||e.pointerId!==D.pid)return;
+    var dy=e.clientY-D.y0;if(!D.moved){if(Math.abs(dy)<4)return;start()}
+    e.preventDefault();
+    D.card.style.top=(D.top+dy)+'px';
+    var mid=D.top+dy+D.card.offsetHeight/2,list=cards().filter(function(c){return c!==D.card}),placed=false;
+    for(var i=0;i<list.length;i++){var rr=list[i].getBoundingClientRect();if(mid<rr.top+rr.height/2){if(D.slot.nextSibling!==list[i])list[i].parentNode.insertBefore(D.slot,list[i]);placed=true;break}}
+    if(!placed&&list.length){var last=list[list.length-1];if(last.nextSibling!==D.slot)last.parentNode.insertBefore(D.slot,last.nextSibling)}
+    /* scroll the page when dragging near the top or bottom */
+    var H=window.innerHeight;if(e.clientY<90)window.scrollBy(0,-8);else if(e.clientY>H-130)window.scrollBy(0,8);
+  },{passive:false});
+  function end(e){
+    if(!D||(e&&e.pointerId!==D.pid))return;var d=D;D=null;
+    if(!d.moved)return;
+    document.body.classList.remove('dragging-on');
+    if(!d.slot.parentNode){render();return}
+    d.slot.parentNode.insertBefore(d.card,d.slot);d.slot.remove();
+    var c=d.card;c.classList.remove('dragging');c.style.position=c.style.left=c.style.width=c.style.top=c.style.margin='';document.body.classList.remove('dragging-on');
+    var ids=cards().map(function(x){return x.dataset.tid});
+    ids.forEach(function(id,i){var t=find(id);if(t)t.order=i});
+    vib(8);try{var cx=ctx();if(cx){var n=cx.currentTime;tone(cx,'sine',780,0,n,.09,.05)}}catch(x){}
+    commit();
+  }
+  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+  /* keyboard: focus a handle and use the arrow keys */
+  document.addEventListener('keydown',function(e){
+    var g=e.target.closest&&e.target.closest('.grip');if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;e.preventDefault();
+    var ids=cards().map(function(x){return x.dataset.tid}),i=ids.indexOf(g.dataset.drag),j=i+(e.key==='ArrowUp'?-1:1);if(j<0||j>=ids.length)return;
+    var tmp=ids[i];ids[i]=ids[j];ids[j]=tmp;ids.forEach(function(id,k){var t=find(id);if(t)t.order=k});commit();
+    var ng=document.querySelector('.grip[data-drag="'+tmp+'"]');if(ng)ng.focus();
+  });
+})();
 /* the ducks swim under the town's scroll layer, so find them by where the finger landed */
 function duckAt(x,y){var ds=document.querySelectorAll('.duck-family');for(var i=0;i<ds.length;i++){var r=ds[i].getBoundingClientRect();if(x>=r.left-12&&x<=r.right+12&&y>=r.top-14&&y<=r.bottom+10)return ds[i]}return null}
 document.addEventListener('click',function(e){var b=e.target.closest('[data-act]');if(!b||b.closest('.scroller')&&!b.closest('.ti')){var d=duckAt(e.clientX,e.clientY);if(d)b=d}if(!b)return;var a=act[b.dataset.act];if(a){e.preventDefault();a(b,b.dataset.id,e)}});
