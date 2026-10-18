@@ -236,6 +236,13 @@ body.dragging-on{-webkit-user-select:none;user-select:none}
 .floorbar i{flex:1;height:8px;border-radius:4px;background:var(--line)}
 .floorbar i.on{background:var(--c)}
 .steps{display:flex;flex-direction:column;gap:6px}
+.step-row{display:flex;align-items:center;gap:4px}
+.step-row>.step{flex:1;min-width:0}
+.sgrip,.sgrip-sp{width:22px;height:44px;flex-shrink:0}
+.sgrip{border:0;background:none;padding:0;display:grid;place-items:center;color:var(--muted);opacity:.45;cursor:grab;touch-action:none;-webkit-user-select:none;user-select:none}
+.sgrip:hover,.sgrip:focus-visible,.step-row.dragging .sgrip{opacity:1}
+.step-row.dragging{z-index:5;box-sizing:border-box;filter:drop-shadow(0 10px 16px rgba(74,31,18,.22));transform:scale(1.02)}
+.step-slot{border:2px dashed var(--line);border-radius:14px;box-sizing:border-box}
 .step{display:flex;align-items:center;gap:12px;width:100%;min-height:50px;border:0;background:var(--bg);border-radius:14px;padding:6px 12px 6px 8px;text-align:left;cursor:pointer}
 .step .dot{width:34px;height:34px;border-radius:10px;background:var(--chip);color:#fff;display:grid;place-items:center;font-weight:700;font-size:13px;flex-shrink:0}
 .step.done .dot{background:var(--c)}
@@ -1297,7 +1304,9 @@ function bigHTML(t){
   var bar=t.steps.map(function(s){return '<i class="'+(s.done?'on':'')+'"></i>'}).join('');
   var steps=t.steps.map(function(s,k){
     var pop=ui.justDone===s.id?' pop':'';
-    return '<button class="step'+(s.done?' done':'')+(k===next?' next':'')+pop+'" data-act="step" data-id="'+t.id+'" data-sid="'+s.id+'" aria-pressed="'+(s.done?'true':'false')+'" aria-label="'+(s.done?'Undo floor ':'Build floor ')+(k+1)+': '+esc(s.text)+'"><span class="dot">'+(s.done?CHECK_S:'F'+(k+1))+'</span><span class="s-text">'+esc(s.text)+'</span><span class="s-coin">+'+R.step+'</span></button>';
+    var canMove=!s.done&&!t.done&&n-b>1;
+    return '<div class="step-row'+(s.done?' built':'')+'" data-sid="'+s.id+'">'+(canMove?'<button class="sgrip" data-sdrag="'+s.id+'" data-tid="'+t.id+'" aria-label="Drag to move floor: '+esc(s.text)+'"><svg width="12" height="20" viewBox="0 0 14 22" aria-hidden="true"><g fill="currentColor"><circle cx="4" cy="5" r="1.9"></circle><circle cx="10" cy="5" r="1.9"></circle><circle cx="4" cy="11" r="1.9"></circle><circle cx="10" cy="11" r="1.9"></circle><circle cx="4" cy="17" r="1.9"></circle><circle cx="10" cy="17" r="1.9"></circle></g></svg></button>':(t.done||n-b<=1?'':'<span class="sgrip-sp"></span>'))+
+      '<button class="step'+(s.done?' done':'')+(k===next?' next':'')+pop+'" data-act="step" data-id="'+t.id+'" data-sid="'+s.id+'" aria-pressed="'+(s.done?'true':'false')+'" aria-label="'+(s.done?'Undo floor ':'Build floor ')+(k+1)+': '+esc(s.text)+'"><span class="dot">'+(s.done?CHECK_S:'F'+(k+1))+'</span><span class="s-text">'+esc(s.text)+'</span><span class="s-coin">+'+R.step+'</span></button></div>';
   }).join('');
   var sub=(t.imp&&!t.done?'<span class="imp-tag">\u2605 Important</span>':'')+repLabel(t)+(t.done?'Built! '+esc(t.look.name)+' stands in your town':b+' of '+n+' floors · '+esc(t.look.name));
   return '<div class="task big'+(t.done?' done':'')+(t.imp&&!t.done?' imp':'')+'" data-tid="'+t.id+'" style="--c:'+t.look.color+'">'+
@@ -1572,6 +1581,50 @@ var act={
     var ids=cards().map(function(x){return x.dataset.tid}),i=ids.indexOf(g.dataset.drag),j=i+(e.key==='ArrowUp'?-1:1);if(j<0||j>=ids.length)return;
     var tmp=ids[i];ids[i]=ids[j];ids[j]=tmp;ids.forEach(function(id,k){var t=find(id);if(t)t.order=k});commit();
     var ng=document.querySelector('.grip[data-drag="'+tmp+'"]');if(ng)ng.focus();
+  });
+})();
+/* drag a floor's handle to change the order of floors that aren't built yet */
+(function(){
+  var D=null;
+  function rows(box){return Array.prototype.slice.call(box.querySelectorAll('.step-row:not(.built)'))}
+  function save(box,tid){
+    var t=find(tid);if(!t)return;
+    var order=rows(box).map(function(r){return r.dataset.sid}),byId={};t.steps.forEach(function(x){byId[x.id]=x});
+    var j=0;t.steps=t.steps.map(function(x){return x.done?x:byId[order[j++]]||x});
+    commit();
+  }
+  document.addEventListener('pointerdown',function(e){
+    var g=e.target.closest&&e.target.closest('.sgrip');if(!g||e.button>0)return;
+    var row=g.closest('.step-row'),box=g.closest('.steps');if(!row||!box)return;e.preventDefault();e.stopPropagation();
+    var r=row.getBoundingClientRect(),slot=document.createElement('div');slot.className='step-slot';slot.style.height=r.height+'px';
+    D={row:row,box:box,tid:g.dataset.tid,slot:slot,y0:e.clientY,top:r.top,pid:e.pointerId,moved:false};
+    try{g.setPointerCapture(e.pointerId)}catch(x){}
+  },true);
+  document.addEventListener('pointermove',function(e){
+    if(!D||e.pointerId!==D.pid)return;var dy=e.clientY-D.y0;
+    if(!D.moved){if(Math.abs(dy)<4)return;D.moved=true;var r=D.row.getBoundingClientRect();D.row.parentNode.insertBefore(D.slot,D.row);D.row.classList.add('dragging');document.body.classList.add('dragging-on');
+      var st=D.row.style;st.position='fixed';st.left=r.left+'px';st.width=r.width+'px';st.top=r.top+'px';vib(10)}
+    e.preventDefault();D.row.style.top=(D.top+dy)+'px';
+    var mid=D.top+dy+D.row.offsetHeight/2,list=rows(D.box).filter(function(x){return x!==D.row}),placed=false;
+    for(var i=0;i<list.length;i++){var rr=list[i].getBoundingClientRect();if(mid<rr.top+rr.height/2){if(D.slot.nextSibling!==list[i])list[i].parentNode.insertBefore(D.slot,list[i]);placed=true;break}}
+    if(!placed&&list.length){var last=list[list.length-1];if(last.nextSibling!==D.slot)last.parentNode.insertBefore(D.slot,last.nextSibling)}
+    var H=window.innerHeight;if(e.clientY<90)window.scrollBy(0,-8);else if(e.clientY>H-130)window.scrollBy(0,8);
+  },{passive:false});
+  function end(e){
+    if(!D||(e&&e.pointerId!==D.pid))return;var d=D;D=null;if(!d.moved)return;
+    document.body.classList.remove('dragging-on');
+    if(!d.slot.parentNode){render();return}
+    d.slot.parentNode.insertBefore(d.row,d.slot);d.slot.remove();d.row.classList.remove('dragging');
+    var st=d.row.style;st.position=st.left=st.width=st.top='';
+    vib(8);try{var cx=ctx();if(cx){var n=cx.currentTime;tone(cx,'sine',780,0,n,.09,.05)}}catch(x){}
+    save(d.box,d.tid);
+  }
+  document.addEventListener('pointerup',end);document.addEventListener('pointercancel',end);
+  document.addEventListener('keydown',function(e){
+    var g=e.target.closest&&e.target.closest('.sgrip');if(!g||(e.key!=='ArrowUp'&&e.key!=='ArrowDown'))return;e.preventDefault();
+    var box=g.closest('.steps'),row=g.closest('.step-row'),list=rows(box),i=list.indexOf(row),j=i+(e.key==='ArrowUp'?-1:1);if(j<0||j>=list.length)return;
+    if(j<i)box.insertBefore(row,list[j]);else box.insertBefore(row,list[j].nextSibling);
+    var sid=g.dataset.sdrag;save(box,g.dataset.tid);var ng=document.querySelector('.sgrip[data-sdrag="'+sid+'"]');if(ng)ng.focus();
   });
 })();
 /* the ducks swim under the town's scroll layer, so find them by where the finger landed */
