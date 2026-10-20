@@ -1345,7 +1345,6 @@ function renderToday(){
   if(list.length){h+='<div class="tasks">'+list.map(function(t){return t.kind==='quick'?quickHTML(t):bigHTML(t)}).join('')+'</div>'}
   else h+='<div class="empty"><b>'+(S.tasks.length?'All clear for today':'Your town is waiting')+'</b><p>'+(S.tasks.length?'Add another tiny thing, or enjoy the view.':'Add one tiny thing. Smashing it grows your first flower.')+'</p><button class="cta small" data-act="open-sheet">Add a task</button></div>';
   h+=repeatsHTML();
-  h+='<button class="five" data-act="five"><svg width="22" height="22" viewBox="0 0 24 24" aria-hidden="true"><circle cx="12" cy="13" r="8" fill="none" stroke="#fff" stroke-width="2.5"></circle><path d="M12 9v4l2.5 2M9 2h6" fill="none" stroke="#fff" stroke-width="2.5" stroke-linecap="round"></path></svg>Just 5 minutes</button>';
   $('view').innerHTML=h;
 }
 
