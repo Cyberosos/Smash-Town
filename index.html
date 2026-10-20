@@ -726,10 +726,19 @@ Engine.prototype.startStream=function(){
   var lp=c.createBiquadFilter();lp.type='lowpass';lp.frequency.value=4200;
   var g=c.createGain();g.gain.value=.35;this.streamGain=g;
   s.connect(hp);hp.connect(lp);lp.connect(g);g.connect(this.bus.stream);this.send(g,.2,'stream');s.start();
+  /* swap in the recorded stream when it loads; the made-up one stays as a fallback */
+  var self=this;
+  try{fetch('stream.wav').then(function(r){if(!r.ok)throw 0;return r.arrayBuffer()}).then(function(ab){return new Promise(function(res,rej){var p=c.decodeAudioData(ab,res,rej);if(p&&p.then)p.then(res,rej)})}).then(function(buf){
+    var rs=c.createBufferSource();rs.buffer=buf;rs.loop=true;
+    var rg=c.createGain(),t=c.currentTime;rg.gain.setValueAtTime(.0001,t);rg.gain.linearRampToValueAtTime(.6,t+1.5);
+    rs.connect(rg);rg.connect(self.bus.stream);self.send(rg,.08,'stream');rs.start(t,Math.random()*buf.duration);
+    g.gain.cancelScheduledValues(t);g.gain.setValueAtTime(g.gain.value,t);g.gain.linearRampToValueAtTime(.0001,t+1.5);
+    self.realStream=true;setTimeout(function(){try{s.stop()}catch(e){}},2000);
+  }).catch(function(){})}catch(e){}
 };
 /* the stream "babbles": fast random swells plus tiny water bubbles */
 Engine.prototype.babble=function(t){
-  if(!GM_L('stream').on)return;var c=this.c;
+  if(!GM_L('stream').on||this.realStream)return;var c=this.c;
   this.streamGain.gain.setTargetAtTime(rr(.22,.5),t,.05);
   if(Math.random()<.35){
     var o=c.createOscillator(),g=c.createGain(),p=this.pan(rr(-.6,.6)),f0=rr(500,900);
