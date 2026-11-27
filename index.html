@@ -367,6 +367,7 @@ body.dragging-on{-webkit-user-select:none;user-select:none}
 .rep-in{width:70px;height:40px;border:2px solid var(--line);border-radius:12px;background:var(--card);text-align:center;font-size:17px;font-weight:600;font-family:inherit;color:var(--ink);box-sizing:border-box}
 .rep-in.date{width:auto;padding:0 10px;text-align:left}
 .rep-ic.cal{background:#DCEBFF;color:#1F5FCC}
+.rep-btns{display:flex;flex-direction:column;gap:6px;flex-shrink:0}
 .rep-tag{display:inline-flex;align-items:center;gap:3px;font-weight:600;color:var(--red-ink);margin-right:4px}
 .reps{display:flex;flex-direction:column;gap:8px}
 .rep-card{display:flex;align-items:center;gap:12px;background:var(--card);border-radius:18px;padding:10px 12px;box-shadow:0 2px 0 var(--line)}
@@ -1360,7 +1361,7 @@ function menuHTML(t){
   if(ui.menu!==t.id)return '';
   var tower=t.kind==='big'&&!t.done,sr=t.seriesId?findSeries(t.seriesId):null;
   if(sr&&ui.confirmDel===t.id)return '<div class="menu"><span>Skip it just for today? It comes back on its next day.</span><button class="btn-sm" data-act="del-no">Keep</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Skip today</button></div>';
-  if(sr)return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button>'+(t.done?'':'<button class="btn-sm" data-act="imp" data-id="'+t.id+'">'+(t.imp?'Not important':'\u2605 Important')+'</button><button class="btn-sm" data-act="to-top" data-id="'+t.id+'">Move to top</button>')+'<button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button>'+(sr.stopped?'':'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">Stop repeating</button>')+(t.done?'':'<button class="btn-sm danger" data-act="del" data-id="'+t.id+'">Skip today</button>')+'</div>';
+  if(sr)return '<div class="menu"><button class="btn-sm" data-act="menu" data-id="'+t.id+'">Close</button>'+(t.done?'':'<button class="btn-sm" data-act="imp" data-id="'+t.id+'">'+(t.imp?'Not important':'\u2605 Important')+'</button><button class="btn-sm" data-act="to-top" data-id="'+t.id+'">Move to top</button>')+'<button class="btn-sm" data-act="edit" data-id="'+t.id+'">'+(t.kind==='big'?'Edit floors':'Rename')+'</button><button class="btn-sm" data-act="rep-edit" data-id="'+sr.id+'">'+(sr.repeat.freq==='once'?'Change date':'Edit repeat')+'</button>'+(sr.stopped?'':'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">Stop repeating</button>')+(t.done?'':'<button class="btn-sm danger" data-act="del" data-id="'+t.id+'">Skip today</button>')+'</div>';
   if(ui.confirmDel===t.id)return tower
     ?'<div class="menu"><span>Cancel this tower? The whole building and all its floors will be removed.</span><button class="btn-sm" data-act="del-no">Keep building</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Remove tower</button></div>'
     :'<div class="menu"><span>Delete it and its spot in town?</span><button class="btn-sm" data-act="del-no">Keep</button><button class="btn-sm danger" data-act="del-yes" data-id="'+t.id+'">Delete</button></div>';
@@ -1566,6 +1567,7 @@ var act={
     if(sr.repeat.freq==='once'){S.tasks=S.tasks.filter(function(t){return !(t.seriesId===sr.id&&!t.done&&!(t.kind==='big'&&t.steps.some(function(x){return x.done})))});sr.hidden=true;toast('<b>'+esc(sr.title)+'</b> is canceled.')}
     else toast('<b>'+esc(sr.title)+'</b> will not repeat anymore. Today\'s one stays.');commit()},
   'rp-notime':function(){RP.time='';sfx.tap();renderRepeat()},
+  'rep-edit':function(b,id){openSeries(id)},
   'rep-hide':function(b,id){var sr=findSeries(id);if(!sr)return;sr.hidden=true;sr.stopped=true;sfx.tap();commit()},
   ttimer:function(b,id){openTaskTimer(id)},
   't-open':function(b,id){openTaskTimer(id)},
@@ -1903,7 +1905,7 @@ function repeatsHTML(){
     var done=S.tasks.filter(function(t){return t.seriesId===sr.id&&t.done}).length;
     var live=!sr.stopped&&nx;
     return '<div class="rep-card'+(live?'':' over')+'"><span class="rep-ic'+(once?' cal':'')+'">'+(once?CAL_ICON:REP_ICON).replace('width="15" height="15"','width="22" height="22"')+'</span><div class="t-main"><div class="t-title">'+esc(sr.title)+'</div><div class="t-sub">'+esc(ruleText(sr))+'</div><div class="t-sub"><b>'+when+'</b>'+(once?'':' · '+done+' smashed')+'</div></div>'+
-      (live?'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">'+(once?'Cancel':'Stop')+'</button>':'<button class="btn-sm" data-act="rep-hide" data-id="'+sr.id+'">Remove</button>')+'</div>';
+      '<div class="rep-btns"><button class="btn-sm" data-act="rep-edit" data-id="'+sr.id+'">Edit</button>'+(live?'<button class="btn-sm" data-act="rep-stop" data-id="'+sr.id+'">'+(once?'Cancel':'Stop')+'</button>':'<button class="btn-sm" data-act="rep-hide" data-id="'+sr.id+'">Remove</button>')+'</div></div>';
   }).join('')+'</div>';
 }
 
@@ -1917,11 +1919,12 @@ function rpSummary(){
 }
 function renderRepeat(){
   var F=[['none','Today only'],['once','Pick a date'],['daily','Daily'],['weekly','Weekly'],['monthly','Monthly'],['yearly','Yearly']];
+  if(editSeriesId)F=F.slice(1);
   var h='<div class="rep-head"><span class="sw-title">'+REP_ICON.replace('width="15" height="15"','width="18" height="18"')+' Repeat or schedule</span><span class="sw-sub" id="repSum">'+esc(rpSummary())+'</span></div>';
   h+='<div class="rchips" role="group" aria-label="Repeat or schedule">'+F.map(function(f){return '<button type="button" class="rchip" data-act="rp-freq" data-v="'+f[0]+'" aria-pressed="'+(RP.freq===f[0])+'">'+f[1]+'</button>'}).join('')+'</div>';
   if(RP.freq!=='none'){
     var once=RP.freq==='once';
-    h+='<div class="rep-row"><label for="repOn">'+(once?'On':'Starts')+'</label><input id="repOn" class="rep-in date" type="date" min="'+dayKey()+'" value="'+RP.on+'"></div>';
+    h+='<div class="rep-row"><label for="repOn">'+(once?'On':'Starts')+'</label><input id="repOn" class="rep-in date" type="date" min="'+(editSeriesId&&RP.origStart&&RP.origStart<dayKey()?RP.origStart:dayKey())+'" value="'+RP.on+'"></div>';
     h+='<div class="rep-row"><label for="repTime">At</label><input id="repTime" class="rep-in date" type="time" value="'+RP.time+'">'+(RP.time?'<button type="button" class="btn-sm" data-act="rp-notime">No time</button>':'<span class="rep-sub">optional</span>')+'</div>';
   }
   if(RP.freq!=='none'&&RP.freq!=='once'){
@@ -1936,7 +1939,7 @@ function renderRepeat(){
 function rpRefreshSum(){var e=$('repSum');if(e)e.textContent=rpSummary()}
 
 /* ---------- add sheet ---------- */
-var sheetSteps=[];var editId=null;
+var sheetSteps=[];var editId=null;var editSeriesId=null;
 function blankSteps(){return [0,1,2].map(function(){return{id:null,text:'',done:false,doneAt:null}})}
 function setSwitch(on){
   $('bdSwitch').setAttribute('aria-checked',on?'true':'false');
@@ -1955,6 +1958,7 @@ function renderSteps(focusIdx){
   if(focusIdx!=null){var el=$('st-'+focusIdx);if(el)el.focus()}
 }
 function openSheet(id){
+  editSeriesId=null;
   editId=(typeof id==='string'&&find(id))?id:null;ui.menu=null;ui.confirmDel=null;$('formErr').textContent='';
   if(editId){
     var t=find(editId),big=t.kind==='big';
@@ -1968,11 +1972,57 @@ function openSheet(id){
   }
   render();$('sheet').hidden=false;setTimeout(function(){if(!editId)$('tTitle').focus()},60);sfx.tap();
 }
-function closeSheet(){$('sheet').hidden=true}
+function closeSheet(){$('sheet').hidden=true;editSeriesId=null}
+/* edit a repeating or scheduled task: same form, already filled in */
+function openSeries(id){
+  var sr=findSeries(id);if(!sr)return;
+  editId=null;editSeriesId=id;ui.menu=null;ui.confirmDel=null;$('formErr').textContent='';
+  var r=sr.repeat,e=r.end||{type:'never'},once=r.freq==='once';
+  $('sheetTitle').textContent=once?'Edit scheduled task':'Edit repeating task';
+  $('tTitle').value=sr.title;$('swRow').hidden=true;$('repBox').hidden=false;
+  RP={freq:r.freq,every:r.every||1,days:(r.days||[k2d(sr.start).getDay()]).slice(),end:e.type||'never',count:e.count||30,date:e.date||addDays(dayKey(),30),on:sr.start,time:sr.time||'',origStart:sr.start};
+  renderRepeat();
+  var big=sr.kind==='big';
+  sheetSteps=big?(sr.steps||[]).map(function(x){return{id:null,text:x,done:false,doneAt:null}}):blankSteps();
+  if(big&&sheetSteps.length<2)while(sheetSteps.length<2)sheetSteps.push({id:null,text:'',done:false,doneAt:null});
+  setSwitch(big);$('addCta').textContent='Save changes';
+  render();$('sheet').hidden=false;sfx.tap();
+}
+function saveSeries(title){
+  var sr=findSeries(editSeriesId);if(!sr){closeSheet();return}
+  var big=sr.kind==='big',stepsT=sr.steps||[];
+  if(big){readSteps();stepsT=sheetSteps.map(function(x){return x.text.trim()}).filter(Boolean);if(stepsT.length<2){$('formErr').textContent='A tower needs at least 2 floors.';return}}
+  var ci=$('repCount');if(ci)RP.count=Math.max(1,Math.min(999,parseInt(ci.value,10)||1));
+  var di=$('repDate');if(di&&di.value)RP.date=di.value;
+  var oi=$('repOn');if(oi&&oi.value)RP.on=oi.value;var ti=$('repTime');if(ti)RP.time=ti.value||'';
+  if(!RP.on||(RP.on<dayKey()&&RP.on!==RP.origStart)){$('formErr').textContent='Pick a date from today on.';return}
+  if(RP.freq==='weekly'&&!RP.days.length){$('formErr').textContent='Pick at least one day of the week.';return}
+  if(RP.freq!=='once'&&RP.end==='date'&&(!RP.date||RP.date<dayKey())){$('formErr').textContent='Pick an end date from today on.';return}
+  var oldTime=sr.time||'';
+  sr.title=title;sr.steps=stepsT;sr.start=RP.on;sr.time=RP.time||'';sr.stopped=false;sr.hidden=false;
+  sr.repeat={freq:RP.freq,every:RP.every,days:RP.days.slice(),end:RP.freq==='once'?{type:'never'}:RP.end==='count'?{type:'count',count:RP.count}:RP.end==='date'?{type:'date',date:RP.date}:{type:'never'}};
+  occCache={};
+  /* bring the copy waiting in Today in line with the new settings */
+  var td=dayKey(),once=RP.freq==='once';
+  S.tasks=S.tasks.filter(function(t){
+    if(t.seriesId!==sr.id||t.done)return true;
+    var started=t.kind==='big'&&t.steps.some(function(x){return x.done});
+    var stillToday=once?sr.start<=td:dueToday(sr,td)&&t.occ===td;
+    if(!stillToday&&!started)return false;
+    t.title=title;if(t.time!==sr.time){t.time=sr.time;t.nudged=false}
+    if(big&&!started)t.steps=stepsT.map(function(x){return{id:uid(),text:x,done:false,doneAt:null}});
+    return true;
+  });
+  syncSeries();
+  editSeriesId=null;$('sheet').hidden=true;sfx.ding();commit();
+  var nx=nextDue(sr,td);
+  toast('Saved: <b>'+esc(ruleText(sr))+'</b>'+(nx===td?' · in Today now':nx?' · next on '+k2d(nx).toLocaleDateString(undefined,{weekday:'short',month:'short',day:'numeric'}):''));
+}
 $('addForm').addEventListener('submit',function(e){
   e.preventDefault();
   var title=$('tTitle').value.trim();
   if(!title){$('formErr').textContent='Give your task a name first.';$('tTitle').focus();return}
+  if(editSeriesId){saveSeries(title);return}
   if(editId){saveEdit(title);return}
   var on=$('bdSwitch').getAttribute('aria-checked')==='true';
   var now=Date.now(),t;
